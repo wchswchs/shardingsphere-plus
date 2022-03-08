@@ -2,7 +2,7 @@ package com.shardingbox.sharding.benchmark.algorithm;
 
 import com.shardingbox.sharding.lib.algorithm.standard.StrHashAlgorithm;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;

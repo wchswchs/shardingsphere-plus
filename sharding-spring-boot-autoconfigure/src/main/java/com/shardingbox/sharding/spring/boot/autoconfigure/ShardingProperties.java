@@ -89,6 +89,8 @@ public class ShardingProperties {
     public static class Algorithm {
         private String shardingColumn;
         private String algorithmName = "strHash";
+        private String rangeAlgorithmName;
+        private String expression;
         private final StrHash strHash = new StrHash();
 
         public StrHash getStrHash() {
@@ -109,6 +111,22 @@ public class ShardingProperties {
 
         public void setAlgorithmName(String algorithmName) {
             this.algorithmName = algorithmName;
+        }
+
+        public String getRangeAlgorithmName() {
+            return rangeAlgorithmName;
+        }
+
+        public void setRangeAlgorithmName(String rangeAlgorithmName) {
+            this.rangeAlgorithmName = rangeAlgorithmName;
+        }
+
+        public String getExpression() {
+            return expression;
+        }
+
+        public void setExpression(String expression) {
+            this.expression = expression;
         }
     }
 

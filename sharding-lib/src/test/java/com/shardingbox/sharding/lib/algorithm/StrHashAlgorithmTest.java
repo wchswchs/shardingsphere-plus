@@ -2,7 +2,7 @@ package com.shardingbox.sharding.lib.algorithm;
 
 import com.shardingbox.sharding.lib.algorithm.standard.StrHashAlgorithm;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

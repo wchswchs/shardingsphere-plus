@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.infra.exception.ShardingSphereException;
-import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.underlying.common.exception.ShardingSphereException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -61,15 +61,6 @@ public class StrHashAlgorithm extends AbstractStandardShardingAlgorithm<String> 
             throw new ShardingSphereException("unavailable routed partition: " + routedPartition);
         }
         return StringUtils.joinWith(partitionJoinDelimiter, shardingValue.getLogicTableName(), routedPartition);
-    }
-
-    @Override
-    public void init() {
-    }
-
-    @Override
-    public String getType() {
-        return "STR_HASH";
     }
 
     public int getStartIndex() {

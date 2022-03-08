@@ -3,11 +3,18 @@ package com.shardingbox.sharding.spring.boot.autoconfigure;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.shardingbox.sharding.lib.algorithm.standard.StrHashAlgorithm;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
-import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
-import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
-import org.apache.shardingsphere.sharding.api.config.strategy.sharding.StandardShardingStrategyConfiguration;
-import org.apache.shardingsphere.sharding.spi.ShardingAlgorithm;
+import org.apache.shardingsphere.api.config.sharding.ShardingRuleConfiguration;
+import org.apache.shardingsphere.api.config.sharding.TableRuleConfiguration;
+import org.apache.shardingsphere.api.config.sharding.strategy.ComplexShardingStrategyConfiguration;
+import org.apache.shardingsphere.api.config.sharding.strategy.HintShardingStrategyConfiguration;
+import org.apache.shardingsphere.api.config.sharding.strategy.InlineShardingStrategyConfiguration;
+import org.apache.shardingsphere.api.config.sharding.strategy.StandardShardingStrategyConfiguration;
+import org.apache.shardingsphere.api.sharding.ShardingAlgorithm;
+import org.apache.shardingsphere.api.sharding.complex.ComplexKeysShardingAlgorithm;
+import org.apache.shardingsphere.api.sharding.hint.HintShardingAlgorithm;
+import org.apache.shardingsphere.api.sharding.standard.PreciseShardingAlgorithm;
+import org.apache.shardingsphere.api.sharding.standard.RangeShardingAlgorithm;
+import org.apache.shardingsphere.shardingjdbc.api.ShardingDataSourceFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -15,7 +22,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -85,15 +91,17 @@ public class ShardingAutoConfiguration {
         }
 
         //sharding table strategy config
-        ShardingTableRuleConfiguration shardingTableRuleConfiguration = new ShardingTableRuleConfiguration(
+        TableRuleConfiguration shardingTableRuleConfiguration = new TableRuleConfiguration(
                 properties.getDatasource().getLogicTable(),
                 String.format("ds${0..%d}.%s${0..%d}",
                         properties.getDatasource().getDbPartitionNum() - 1,
                         properties.getDatasource().getLogicTable(),
                         properties.getDatasource().getTablePartitionNum() - 1)
         );
+
+        Object algorithmBean;
         try {
-            Object algorithmBean = context.getBean(properties.getAlgorithm().getAlgorithmName());
+            algorithmBean = context.getBean(properties.getAlgorithm().getAlgorithmName());
             if (!(algorithmBean instanceof ShardingAlgorithm)) {
                 throw new IllegalArgumentException(
                         "configuration item spring.sharding.algorithm.algorithmName not exist"
@@ -104,16 +112,57 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.algorithm.algorithmName not exist"
             );
         }
-        shardingTableRuleConfiguration.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
-                properties.getAlgorithm().getShardingColumn(),
-                properties.getAlgorithm().getAlgorithmName()
-        ));
+
+        if (algorithmBean instanceof PreciseShardingAlgorithm) {
+            if (StringUtils.isEmpty(properties.getAlgorithm().getRangeAlgorithmName())) {
+                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        (PreciseShardingAlgorithm<?>) algorithmBean
+                ));
+            } else {
+                Object rangeAlgorithmBean;
+                try {
+                    rangeAlgorithmBean = context.getBean(properties.getAlgorithm().getRangeAlgorithmName());
+                    if (!(rangeAlgorithmBean instanceof RangeShardingAlgorithm)) {
+                        throw new IllegalArgumentException(
+                                "configuration item spring.sharding.algorithm.rangeAlgorithmName not exist"
+                        );
+                    }
+                } catch (NoSuchBeanDefinitionException e) {
+                    throw new IllegalArgumentException(
+                            "configuration item spring.sharding.algorithm.rangeAlgorithmName not exist"
+                    );
+                }
+                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        (PreciseShardingAlgorithm<?>) algorithmBean,
+                        (RangeShardingAlgorithm<?>) rangeAlgorithmBean
+                ));
+            }
+        }
+        if (algorithmBean instanceof ComplexKeysShardingAlgorithm) {
+            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new ComplexShardingStrategyConfiguration(
+                    properties.getAlgorithm().getShardingColumn(),
+                    (ComplexKeysShardingAlgorithm<?>) algorithmBean
+            ));
+        }
+        if (StringUtils.isNotEmpty(properties.getAlgorithm().getExpression())) {
+            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new InlineShardingStrategyConfiguration(
+                    properties.getAlgorithm().getShardingColumn(),
+                    properties.getAlgorithm().getExpression()
+            ));
+        }
+        if (algorithmBean instanceof HintShardingAlgorithm) {
+            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new HintShardingStrategyConfiguration(
+                    (HintShardingAlgorithm<?>) algorithmBean
+            ));
+        }
 
         //sharding rule config
         ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
-        shardingRuleConfiguration.getTables().add(shardingTableRuleConfiguration);
+        shardingRuleConfiguration.getTableRuleConfigs().add(shardingTableRuleConfiguration);
 
-        return ShardingSphereDataSourceFactory.createDataSource(dataSourceMap, Collections.singleton(shardingRuleConfiguration), new Properties());
+        return ShardingDataSourceFactory.createDataSource(dataSourceMap, shardingRuleConfiguration, new Properties());
     }
 
 }

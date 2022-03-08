@@ -20,6 +20,7 @@ public class ShardingAutoConfigurationTest {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.username:root").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.password:123456").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:column").applyTo(this.context);
     }
 
     @AfterEach
