@@ -24,7 +24,7 @@
         <lombok.version>1.18.20</lombok.version>
         <jmh.version>1.22</jmh.version>
         <junit5.version>5.8.2</junit5.version>
-        <mysql-connector.version>8.0.21</mysql-connector.version>
+        <mysql-connector.version>8.0.28</mysql-connector.version>
         <tomcat.version>10.0.16</tomcat.version>
     </properties>
 
