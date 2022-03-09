@@ -16,5 +16,5 @@ ShardingSphere is a toolkit which is compatible with ShardingSphere of version 4
           <version>Latest Version</version>
       </dependency>
       ```
--   Inject your custom bean for ShardingSphere
+-   Inject your custom extension bean for ShardingSphere
  
