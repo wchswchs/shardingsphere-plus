@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.shardingbox</groupId>
-    <artifactId>shardingbox.parent</artifactId>
+    <groupId>com.shardingsphereplus</groupId>
+    <artifactId>shardingsphereplus.parent</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>sharding-lib</module>
-        <module>sharding-benchmark</module>
-        <module>sharding-spring-boot-autoconfigure</module>
-        <module>sharding-spring-boot-starter</module>
+        <module>shardingsphere-plus-lib</module>
+        <module>shardingsphere-plus-benchmark</module>
+        <module>shardingsphere-plus-spring-boot-autoconfigure</module>
+        <module>shardingsphere-plus-spring-boot-starter</module>
     </modules>
 
     <properties>

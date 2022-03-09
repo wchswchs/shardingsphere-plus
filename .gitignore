@@ -2,9 +2,7 @@
 .project
 .classpath
 .class
-../shardingbox1/.idea/
-.DS_Stor
-e
+.DS_Store
 target
 log
 logs
@@ -20,13 +18,6 @@ target
 
 *.iml
 /out
-/.idea/ant.xml
-/.idea/misc.xml
-/.idea/workspace.xml
-/.idea/modules.xml
-/.idea/compiler.xml
-/.idea/libraries/Maven*.xml
-/.idea/artifacts/*.xml
 /.idea/*.*
 /.idea/*
 /*.iws
