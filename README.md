@@ -36,3 +36,11 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 | spring.sharding.algorithm.expression         | Sharding Inline Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.expression=t_order_item$->{order_id % 2} |
 | spring.sharding.algorithm.strHash.startIndex |                                                              |
 | spring.sharding.algorithm.strHash.endIndex   |                                                              |
+
+## strHash Sharding Algorithm
+StrHash algorithm is a function that you can use to substring part of sharding column value to route table partition.
+The following configuration are:
+| Name                                         | Description                                          |
+| -------------------------------------------- | ---------------------------------------------------- |
+| spring.sharding.algorithm.strHash.startIndex | Start position of sharding column value to substring |
+| spring.sharding.algorithm.strHash.endIndex   | End position of sharding column value to substring   |
