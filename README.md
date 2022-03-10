@@ -33,7 +33,7 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 | spring.sharding.algorithm.shardingColumn          | for example：spring.sharding.algorithm.shardingColumn=order_id |
 | spring.sharding.algorithm.algorithmName           | Sharding Standard Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.algorithmName=strHash |
 | spring.sharding.algorithm.rangeAlgorithmName      | Sharding Range Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.rangeAlgorithmName=range |
-| spring.sharding.algorithm.expression              | Sharding Inline Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.expression=t_order_item$->{order_id % 2} |
+| spring.sharding.algorithm.expression              | If you use Sharding Inline Algorithm, it's your algorithm expression, <br />for example：spring.sharding.algorithm.expression=t_order_item$->{order_id % 2} |
 | spring.sharding.algorithm.dbAlgorithmName         | If not config spring.sharding.algorithm.algorithmName, can use it for database |
 | spring.sharding.algorithm.dbRangeAlgorithmName    | If not config spring.sharding.algorithm.rangeAlgorithmName, can use it for database |
 | spring.sharding.algorithm.tableAlgorithmName      | If not config spring.sharding.algorithm.algorithmName, can use it for table |
