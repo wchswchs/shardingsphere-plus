@@ -89,7 +89,11 @@ public class ShardingProperties {
     public static class Algorithm {
         private String shardingColumn;
         private String algorithmName = "strHash";
+        private String dbAlgorithmName;
+        private String tableAlgorithm;
         private String rangeAlgorithmName;
+        private String dbRangeAlgorithmName;
+        private String tableRangeAlgorithm;
         private String expression;
         private final StrHash strHash = new StrHash();
 
@@ -111,6 +115,38 @@ public class ShardingProperties {
 
         public void setAlgorithmName(String algorithmName) {
             this.algorithmName = algorithmName;
+        }
+
+        public String getDbAlgorithmName() {
+            return dbAlgorithmName;
+        }
+
+        public void setDbAlgorithmName(String dbAlgorithmName) {
+            this.dbAlgorithmName = dbAlgorithmName;
+        }
+
+        public String getDbRangeAlgorithmName() {
+            return dbRangeAlgorithmName;
+        }
+
+        public void setDbRangeAlgorithmName(String dbRangeAlgorithmName) {
+            this.dbRangeAlgorithmName = dbRangeAlgorithmName;
+        }
+
+        public String getTableRangeAlgorithm() {
+            return tableRangeAlgorithm;
+        }
+
+        public void setTableRangeAlgorithm(String tableRangeAlgorithm) {
+            this.tableRangeAlgorithm = tableRangeAlgorithm;
+        }
+
+        public String getTableAlgorithm() {
+            return tableAlgorithm;
+        }
+
+        public void setTableAlgorithm(String tableAlgorithm) {
+            this.tableAlgorithm = tableAlgorithm;
         }
 
         public String getRangeAlgorithmName() {

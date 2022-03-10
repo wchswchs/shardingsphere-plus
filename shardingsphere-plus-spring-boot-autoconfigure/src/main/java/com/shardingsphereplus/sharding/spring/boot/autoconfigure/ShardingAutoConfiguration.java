@@ -81,6 +81,13 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.dbPartitionNum can not lower than 1"
             );
         }
+        if (StringUtils.isEmpty(properties.getAlgorithm().getAlgorithmName())
+        || StringUtils.isEmpty(properties.getAlgorithm().getDbAlgorithmName())
+        || StringUtils.isEmpty(properties.getAlgorithm().getTableAlgorithm())) {
+            throw new IllegalArgumentException(
+                    "one of configuration item spring.sharding.algorithm.[algorithm/dbAlgorithm/tableAlgorithm] must has value"
+            );
+        }
 
         //basic datasource config
         String jdbcUrl = properties.getDatasource().getJdbcUrl();
@@ -109,12 +116,41 @@ public class ShardingAutoConfiguration {
                         properties.getDatasource().getTablePartitionNum() - 1)
         );
 
+        //build sharding algorithm
+        String dbAlgorithm = properties.getAlgorithm().getAlgorithmName();
+        String dbRangeAlgorithm = properties.getAlgorithm().getRangeAlgorithmName();
+        if (StringUtils.isNotEmpty(properties.getAlgorithm().getDbAlgorithmName())) {
+            dbAlgorithm = properties.getAlgorithm().getDbAlgorithmName();
+        }
+        if (StringUtils.isNotEmpty(properties.getAlgorithm().getDbRangeAlgorithmName())) {
+            dbRangeAlgorithm = properties.getAlgorithm().getDbRangeAlgorithmName();
+        }
+        buildShardingAlgorithmConfiguration(shardingTableRuleConfiguration, dbAlgorithm, dbRangeAlgorithm, "database");
+
+        String tableAlgorithm = properties.getAlgorithm().getAlgorithmName();
+        String tableRangeAlgorithm = properties.getAlgorithm().getRangeAlgorithmName();
+        if (StringUtils.isNotEmpty(properties.getAlgorithm().getTableAlgorithm())) {
+            tableAlgorithm = properties.getAlgorithm().getTableAlgorithm();
+        }
+        if (StringUtils.isNotEmpty(properties.getAlgorithm().getTableRangeAlgorithm())) {
+            tableRangeAlgorithm = properties.getAlgorithm().getTableRangeAlgorithm();
+        }
+        buildShardingAlgorithmConfiguration(shardingTableRuleConfiguration, tableAlgorithm, tableRangeAlgorithm, "table");
+
+        //sharding rule config
+        ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
+        shardingRuleConfiguration.getTableRuleConfigs().add(shardingTableRuleConfiguration);
+
+        return ShardingDataSourceFactory.createDataSource(dataSourceMap, shardingRuleConfiguration, new Properties());
+    }
+
+    private void buildShardingAlgorithmConfiguration(TableRuleConfiguration shardingTableRuleConfiguration, String algorithm, String rangeAlgorithm, String type) {
         Object algorithmBean;
         try {
-            algorithmBean = context.getBean(properties.getAlgorithm().getAlgorithmName());
+            algorithmBean = context.getBean(algorithm);
             if (!(algorithmBean instanceof ShardingAlgorithm)) {
                 throw new IllegalArgumentException(
-                        "configuration item spring.sharding.algorithm.algorithmName not exist"
+                        "one of configuration item spring.sharding.algorithm.[algorithmName/tableAlgorithm] not exist"
                 );
             }
         } catch (NoSuchBeanDefinitionException e) {
@@ -124,15 +160,22 @@ public class ShardingAutoConfiguration {
         }
 
         if (algorithmBean instanceof PreciseShardingAlgorithm) {
-            if (StringUtils.isEmpty(properties.getAlgorithm().getRangeAlgorithmName())) {
-                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
-                        properties.getAlgorithm().getShardingColumn(),
-                        (PreciseShardingAlgorithm<?>) algorithmBean
-                ));
+            if (StringUtils.isEmpty(rangeAlgorithm)) {
+                if ("database".equals(type)) {
+                    shardingTableRuleConfiguration.setDatabaseShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                            properties.getAlgorithm().getShardingColumn(),
+                            (PreciseShardingAlgorithm<?>) algorithmBean
+                    ));
+                } else {
+                    shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                            properties.getAlgorithm().getShardingColumn(),
+                            (PreciseShardingAlgorithm<?>) algorithmBean
+                    ));
+                }
             } else {
                 Object rangeAlgorithmBean;
                 try {
-                    rangeAlgorithmBean = context.getBean(properties.getAlgorithm().getRangeAlgorithmName());
+                    rangeAlgorithmBean = context.getBean(rangeAlgorithm);
                     if (!(rangeAlgorithmBean instanceof RangeShardingAlgorithm)) {
                         throw new IllegalArgumentException(
                                 "configuration item spring.sharding.algorithm.rangeAlgorithmName not exist"
@@ -143,36 +186,58 @@ public class ShardingAutoConfiguration {
                             "configuration item spring.sharding.algorithm.rangeAlgorithmName not exist"
                     );
                 }
-                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
-                        properties.getAlgorithm().getShardingColumn(),
-                        (PreciseShardingAlgorithm<?>) algorithmBean,
-                        (RangeShardingAlgorithm<?>) rangeAlgorithmBean
-                ));
+                if ("database".equals(type)) {
+                    shardingTableRuleConfiguration.setDatabaseShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                            properties.getAlgorithm().getShardingColumn(),
+                            (PreciseShardingAlgorithm<?>) algorithmBean,
+                            (RangeShardingAlgorithm<?>) rangeAlgorithmBean
+                    ));
+                } else {
+                    shardingTableRuleConfiguration.setTableShardingStrategyConfig(new StandardShardingStrategyConfiguration(
+                            properties.getAlgorithm().getShardingColumn(),
+                            (PreciseShardingAlgorithm<?>) algorithmBean,
+                            (RangeShardingAlgorithm<?>) rangeAlgorithmBean
+                    ));
+                }
             }
         }
         if (algorithmBean instanceof ComplexKeysShardingAlgorithm) {
-            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new ComplexShardingStrategyConfiguration(
-                    properties.getAlgorithm().getShardingColumn(),
-                    (ComplexKeysShardingAlgorithm<?>) algorithmBean
-            ));
+            if ("database".equals(type)) {
+                shardingTableRuleConfiguration.setDatabaseShardingStrategyConfig(new ComplexShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        (ComplexKeysShardingAlgorithm<?>) algorithmBean
+                ));
+            } else {
+                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new ComplexShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        (ComplexKeysShardingAlgorithm<?>) algorithmBean
+                ));
+            }
         }
         if (StringUtils.isNotEmpty(properties.getAlgorithm().getExpression())) {
-            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new InlineShardingStrategyConfiguration(
-                    properties.getAlgorithm().getShardingColumn(),
-                    properties.getAlgorithm().getExpression()
-            ));
+            if ("database".equals(type)) {
+                shardingTableRuleConfiguration.setDatabaseShardingStrategyConfig(new InlineShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        properties.getAlgorithm().getExpression()
+                ));
+            } else {
+                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new InlineShardingStrategyConfiguration(
+                        properties.getAlgorithm().getShardingColumn(),
+                        properties.getAlgorithm().getExpression()
+                ));
+            }
         }
         if (algorithmBean instanceof HintShardingAlgorithm) {
-            shardingTableRuleConfiguration.setTableShardingStrategyConfig(new HintShardingStrategyConfiguration(
-                    (HintShardingAlgorithm<?>) algorithmBean
-            ));
+            if ("database".equals(type)) {
+                shardingTableRuleConfiguration.setDatabaseShardingStrategyConfig(new HintShardingStrategyConfiguration(
+                        (HintShardingAlgorithm<?>) algorithmBean
+                ));
+            } else {
+                shardingTableRuleConfiguration.setTableShardingStrategyConfig(new HintShardingStrategyConfiguration(
+                        (HintShardingAlgorithm<?>) algorithmBean
+                ));
+            }
         }
-
-        //sharding rule config
-        ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
-        shardingRuleConfiguration.getTableRuleConfigs().add(shardingTableRuleConfiguration);
-
-        return ShardingDataSourceFactory.createDataSource(dataSourceMap, shardingRuleConfiguration, new Properties());
     }
 
 }
