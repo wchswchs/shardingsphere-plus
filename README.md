@@ -1,9 +1,9 @@
 # ShardingSphere-Plus
-ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of version 4. 
+ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of version 5. 
 
 ## Features
 -   Support custom sharding algorithm with parameters
--   Fully compatible with ShardingSphere of version 4
+-   Simplify datasource configuration
 -   Support pluggable custom interface for sharding algorithm
 -   Built in StrHash sharding algorithm with parameters
 

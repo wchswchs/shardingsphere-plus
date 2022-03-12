@@ -1,8 +1,7 @@
 package com.shardingsphereplus.sharding.lib.algorithm;
 
 import com.shardingsphereplus.sharding.lib.algorithm.standard.StrHashAlgorithm;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,7 +12,6 @@ import java.util.List;
 
 public class StrHashAlgorithmTest {
 
-    private final String logicTable = "table";
     private final List<String> partitions = new ArrayList<>();
     private PreciseShardingValue<String> preciseShardingValue;
 
@@ -24,7 +22,7 @@ public class StrHashAlgorithmTest {
     public void testDoSharding4Substring() {
         strHashAlgorithm.setEndIndex(2);
         Assertions.assertEquals(
-                StringUtils.joinWith("_", logicTable, partitions.get(11)),
+                partitions.get(13),
                 strHashAlgorithm.doSharding(partitions, preciseShardingValue)
         );
     }
@@ -33,7 +31,7 @@ public class StrHashAlgorithmTest {
     @DisplayName("整串分片测试")
     public void testDoSharding() {
         Assertions.assertEquals(
-                StringUtils.joinWith("_", logicTable, partitions.get(15)),
+                partitions.get(14),
                 strHashAlgorithm.doSharding(partitions, preciseShardingValue)
         );
     }
@@ -48,13 +46,12 @@ public class StrHashAlgorithmTest {
 
     @BeforeEach
     public void setUp() {
+        String logicTable = "table";
         for (int i = 0; i < 32; i ++) {
-            String partition = StringUtils.leftPad(String.valueOf(i), 3, '0');
-            partitions.add(partition);
+            partitions.add(logicTable + i);
         }
-
         String columnName = "column1";
-        String shardingValue = "S48c1jogpnd3";
+        String shardingValue = "S48c1fhv3s9l";
         preciseShardingValue =
                 new PreciseShardingValue<>(logicTable, columnName, shardingValue);
 

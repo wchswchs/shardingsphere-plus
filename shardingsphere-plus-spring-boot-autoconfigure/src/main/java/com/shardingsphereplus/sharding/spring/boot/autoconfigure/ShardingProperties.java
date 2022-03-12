@@ -6,19 +6,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ShardingProperties {
 
     private final Algorithm algorithm = new Algorithm();
-    private String tableJoinDelimiter = "_";
     private Datasource datasource = new Datasource();
+    private String partitionJoinDelimiter = "_";
+    private String sqlShow = "false";
 
     public Algorithm getAlgorithm() {
         return algorithm;
-    }
-
-    public String getTableJoinDelimiter() {
-        return tableJoinDelimiter;
-    }
-
-    public void setTableJoinDelimiter(String tableJoinDelimiter) {
-        this.tableJoinDelimiter = tableJoinDelimiter;
     }
 
     public Datasource getDatasource() {
@@ -27,6 +20,22 @@ public class ShardingProperties {
 
     public void setDatasource(Datasource datasource) {
         this.datasource = datasource;
+    }
+
+    public String getPartitionJoinDelimiter() {
+        return partitionJoinDelimiter;
+    }
+
+    public void setPartitionJoinDelimiter(String partitionJoinDelimiter) {
+        this.partitionJoinDelimiter = partitionJoinDelimiter;
+    }
+
+    public String getSqlShow() {
+        return sqlShow;
+    }
+
+    public void setSqlShow(String sqlShow) {
+        this.sqlShow = sqlShow;
     }
 
     public static class Datasource {
@@ -88,13 +97,7 @@ public class ShardingProperties {
 
     public static class Algorithm {
         private String shardingColumn;
-        private String algorithmName = "strHash";
-        private String dbAlgorithmName;
-        private String tableAlgorithm;
-        private String rangeAlgorithmName;
-        private String dbRangeAlgorithmName;
-        private String tableRangeAlgorithm;
-        private String expression;
+        private String algorithmName = "StrHash";
         private final StrHash strHash = new StrHash();
 
         public StrHash getStrHash() {
@@ -115,54 +118,6 @@ public class ShardingProperties {
 
         public void setAlgorithmName(String algorithmName) {
             this.algorithmName = algorithmName;
-        }
-
-        public String getDbAlgorithmName() {
-            return dbAlgorithmName;
-        }
-
-        public void setDbAlgorithmName(String dbAlgorithmName) {
-            this.dbAlgorithmName = dbAlgorithmName;
-        }
-
-        public String getDbRangeAlgorithmName() {
-            return dbRangeAlgorithmName;
-        }
-
-        public void setDbRangeAlgorithmName(String dbRangeAlgorithmName) {
-            this.dbRangeAlgorithmName = dbRangeAlgorithmName;
-        }
-
-        public String getTableRangeAlgorithm() {
-            return tableRangeAlgorithm;
-        }
-
-        public void setTableRangeAlgorithm(String tableRangeAlgorithm) {
-            this.tableRangeAlgorithm = tableRangeAlgorithm;
-        }
-
-        public String getTableAlgorithm() {
-            return tableAlgorithm;
-        }
-
-        public void setTableAlgorithm(String tableAlgorithm) {
-            this.tableAlgorithm = tableAlgorithm;
-        }
-
-        public String getRangeAlgorithmName() {
-            return rangeAlgorithmName;
-        }
-
-        public void setRangeAlgorithmName(String rangeAlgorithmName) {
-            this.rangeAlgorithmName = rangeAlgorithmName;
-        }
-
-        public String getExpression() {
-            return expression;
-        }
-
-        public void setExpression(String expression) {
-            this.expression = expression;
         }
     }
 

@@ -18,7 +18,7 @@
         <apache.commons3.version>3.12.0</apache.commons3.version>
         <apache.commons4.version>4.4</apache.commons4.version>
         <guava.version>31.1-jre</guava.version>
-        <shardingsphere.version>4.1.1</shardingsphere.version>
+        <shardingsphere.version>5.1.0</shardingsphere.version>
         <druid.version>1.2.6</druid.version>
         <test4j.version>1.0.2</test4j.version>
         <lombok.version>1.18.20</lombok.version>
@@ -54,7 +54,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>sharding-jdbc-core</artifactId>
+                <artifactId>shardingsphere-jdbc-core</artifactId>
                 <version>${shardingsphere.version}</version>
             </dependency>
             <dependency>
@@ -104,7 +104,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>sharding-jdbc-core</artifactId>
+            <artifactId>shardingsphere-jdbc-core</artifactId>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>

@@ -2,7 +2,7 @@ package com.shardingsphereplus.sharding.benchmark.algorithm;
 
 import com.shardingsphereplus.sharding.lib.algorithm.standard.StrHashAlgorithm;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.api.sharding.standard.PreciseShardingValue;
+import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -22,7 +22,7 @@ public class StrHashAlgorithmBenchmark {
     private final StrHashAlgorithm strHashAlgorithm = new StrHashAlgorithm();
 
     @Benchmark
-    @Threads(1000)
+    @Threads(10)
     public void doSharding() {
         String columnName = "benchmark_column";
         String shardingValue = String.valueOf(ThreadLocalRandom.current().nextLong(0, 1000000));
@@ -35,7 +35,7 @@ public class StrHashAlgorithmBenchmark {
     @Setup
     public void init() {
         for (int i = 0; i < 32; i ++) {
-            String partition = StringUtils.leftPad(String.valueOf(i), 6, '0');
+            String partition = StringUtils.leftPad(String.valueOf(i), 3, '0');
             partitions.add(partition);
         }
     }

@@ -1,7 +1,9 @@
 package com.shardingsphereplus.sharding.spring.boot.autoconfigure;
 
-import com.shardingsphereplus.sharding.lib.algorithm.standard.StrHashAlgorithm;
-import org.apache.shardingsphere.shardingjdbc.jdbc.core.datasource.ShardingDataSource;
+import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
+import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
+import org.apache.shardingsphere.mode.manager.ContextManager;
+import org.apache.shardingsphere.sharding.rule.ShardingRule;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,7 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import javax.sql.DataSource;
+import java.util.Collection;
 import java.util.Map;
 
 public class ShardingAutoConfigurationTest {
@@ -24,7 +27,6 @@ public class ShardingAutoConfigurationTest {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.username:root").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.password:123456").applyTo(this.context);
-        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:column").applyTo(this.context);
     }
 
     @AfterEach
@@ -37,10 +39,24 @@ public class ShardingAutoConfigurationTest {
     @Test
     @DisplayName("分片算法配置参数测试")
     public void testAlgorithm() {
-        TestPropertyValues.of("spring.sharding.algorithm.strHash.endIndex:2").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.StrHash.endIndex:2").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
-        Assertions.assertThat(context.getBean(StrHashAlgorithm.class).getEndIndex()).isEqualTo(2);
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")
+                        .getProps().getProperty("startIndex"))
+                        .isEqualTo("-1");
+                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")
+                        .getProps().getProperty("endIndex"))
+                        .isEqualTo("2");
+            }
+        }
     }
 
     @Test
@@ -49,21 +65,13 @@ public class ShardingAutoConfigurationTest {
         TestPropertyValues.of("spring.sharding.datasource.dbPartitionNum:2").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
-        Map<String, DataSource> dataSourceMap = context.getBean(ShardingDataSource.class).getDataSourceMap();
-        int i = 0;
+        String schemaName = context.getBean(ShardingSphereDataSource.class).getSchemaName();
+        Map<String, DataSource> dataSourceMap = context.getBean(ShardingSphereDataSource.class).getContextManager().getDataSourceMap(schemaName);
+        int i = 1;
         for (final Map.Entry<String, DataSource> dataSourceEntry : dataSourceMap.entrySet()) {
-            Assertions.assertThat(dataSourceEntry.getKey()).isEqualTo("ds" + i);
-            i ++;
+            Assertions.assertThat(dataSourceEntry.getKey()).isEqualTo("test_" + i);
+            i --;
         }
-    }
-
-    @Test
-    @DisplayName("逻辑表连接配置参数测试")
-    public void testTableJoinDelimiter() {
-        TestPropertyValues.of("spring.sharding.tableJoinDelimiter:-").applyTo(context);
-        context.register(ShardingAutoConfiguration.class);
-        context.refresh();
-        Assertions.assertThat(context.getBean(StrHashAlgorithm.class).getPartitionJoinDelimiter()).isEqualTo("-");
     }
 
     @Test
@@ -71,9 +79,21 @@ public class ShardingAutoConfigurationTest {
     public void testNon() {
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
-        Assertions.assertThat(context.getBean(StrHashAlgorithm.class).getPartitionJoinDelimiter()).isEqualTo("_");
-        Assertions.assertThat(context.getBean(StrHashAlgorithm.class).getStartIndex()).isEqualTo(-1);
-        Assertions.assertThat(context.getBean(StrHashAlgorithm.class).getEndIndex()).isEqualTo(-1);
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")
+                        .getProps().getProperty("startIndex"))
+                        .isEqualTo("-1");
+                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")
+                        .getProps().getProperty("endIndex"))
+                        .isEqualTo("-1");
+            }
+        }
     }
 
 }
