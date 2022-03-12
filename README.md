@@ -43,7 +43,7 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 StrHash algorithm is a function that you can use to substring part of sharding column value to route table partition.
 
 ### Purpose
-Make data in partitions sharded evenly.
+Make data in partitions sharded more evenly than other hash algorithms in ShardingSphere.
 
 ### Configuration
 The following configuration are:
