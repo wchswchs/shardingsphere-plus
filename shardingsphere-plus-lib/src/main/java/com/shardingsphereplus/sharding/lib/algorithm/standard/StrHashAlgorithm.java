@@ -1,7 +1,7 @@
 package com.shardingsphereplus.sharding.lib.algorithm.standard;
 
-import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
+import com.shardingsphereplus.sharding.lib.algorithm.AbstractStandardAlgorithm;
 import com.shardingsphereplus.sharding.lib.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -10,31 +10,35 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.shardingsphere.infra.exception.ShardingSphereException;
 import org.apache.shardingsphere.sharding.api.sharding.standard.PreciseShardingValue;
 import org.apache.shardingsphere.sharding.api.sharding.standard.RangeShardingValue;
-import org.apache.shardingsphere.sharding.api.sharding.standard.StandardShardingAlgorithm;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Properties;
 
 @Slf4j
-public class StrHashAlgorithm implements StandardShardingAlgorithm<String> {
+public class StrHashAlgorithm extends AbstractStandardAlgorithm<String> {
 
     private Properties props = new Properties();
     private int startIndex = -1;
     private int endIndex = -1;
-    private String partitionJoinDelimiter;
 
+    private final static String START_INDEX = "startIndex";
+    private final static String END_INDEX = "endIndex";
 
     public StrHashAlgorithm() {
     }
 
     @Override
     public void init() {
-        Preconditions.checkArgument(props.containsKey("startIndex") || props.contains("endIndex"),
-                "startIndex and endIndex cannot be both null.");
-        this.startIndex = Integer.parseInt(props.getProperty("startIndex"));
-        this.endIndex = Integer.parseInt(props.getProperty("endIndex"));
-        this.partitionJoinDelimiter = props.getProperty("partitionJoinDelimiter");
+        if (props.containsKey(START_INDEX)) {
+            this.startIndex = Integer.parseInt(props.getProperty(START_INDEX));
+        }
+        if (props.containsKey(END_INDEX)) {
+            this.endIndex = Integer.parseInt(props.getProperty(END_INDEX));
+        }
+        if (props.containsKey(PARTITION_JOIN_DELIMITER)) {
+            this.partitionJoinDelimiter = props.getProperty(PARTITION_JOIN_DELIMITER);
+        }
     }
 
     @Override

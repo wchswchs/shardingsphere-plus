@@ -5,7 +5,7 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 -   Support custom sharding algorithm with parameters
 -   Simplify datasource configuration
 -   Support pluggable custom interface for sharding algorithm
--   Built in StrHash sharding algorithm with parameters
+-   Built in StrHash sharding algorithm with parameters using murmurhash
 
 ## How to use
 -   Add ShardingSphere-Plus dependency
