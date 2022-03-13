@@ -98,11 +98,6 @@ public class ShardingProperties {
     public static class Algorithm {
         private String shardingColumn;
         private String algorithmName = "StrHash";
-        private final StrHash strHash = new StrHash();
-
-        public StrHash getStrHash() {
-            return strHash;
-        }
 
         public String getShardingColumn() {
             return shardingColumn;

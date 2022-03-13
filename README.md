@@ -22,22 +22,19 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 -   Add Configuration Parameters
 
 ## Spring Boot Configuration Parameters
-| Name                                              | Description                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------ |
-| spring.sharding.datasource.jdbcUrl                | LogicDatabase url，for example：spring.sharding.datasource.jdbcUrl=jdbc:mysql://localhost:3306/test |
-| spring.sharding.datasource.username               | for example：spring.sharding.datasource.username=test        |
-| spring.sharding.datasource.password               | for example：spring.sharding.datasource.password=test        |
-| spring.sharding.datasource.dbPartitionNum         | for example：spring.sharding.datasource.dbPartitionNum=32    |
-| spring.sharding.datasource.logicTable             | for example：spring.sharding.datasource.logicTable=test_table |
-| spring.sharding.datasource.tablePartitionNum      | for example：spring.sharding.datasource.tablePartitionNum=32 |
-| spring.sharding.algorithm.shardingColumn          | for example：spring.sharding.algorithm.shardingColumn=order_id |
-| spring.sharding.algorithm.algorithmName           | Sharding Standard Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.algorithmName=strHash |
-| spring.sharding.algorithm.rangeAlgorithmName      | Sharding Range Algorithm Name, it's your algorithm bean name, <br />for example：spring.sharding.algorithm.rangeAlgorithmName=range |
-| spring.sharding.algorithm.expression              | If you use Sharding Inline Algorithm, it's your algorithm expression, <br />for example：spring.sharding.algorithm.expression=t_order_item$->{order_id % 2} |
-| spring.sharding.algorithm.dbAlgorithmName         | If not config spring.sharding.algorithm.algorithmName, can use it for database |
-| spring.sharding.algorithm.dbRangeAlgorithmName    | If not config spring.sharding.algorithm.rangeAlgorithmName, can use it for database |
-| spring.sharding.algorithm.tableAlgorithmName      | If not config spring.sharding.algorithm.algorithmName, can use it for table |
-| spring.sharding.algorithm.tableRangeAlgorithmName | If not config spring.sharding.algorithm.rangeAlgorithmName, can use it for table |
+```xml
+spring.sharding.algorithm.shardingColumn=name
+spring.sharding.algorithm.strHash.startIndex=1
+spring.sharding.algorithm.strHash.endIndex=3
+spring.sharding.datasource.jdbcUrl=jdbc:mysql://localhost:3306/user
+spring.sharding.datasource.logicTable=user,user_ext
+spring.sharding.algorithm.AlgortihmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE
+spring.sharding.datasource.password=test
+spring.sharding.datasource.tablePartitionNum=3
+spring.sharding.datasource.username=test
+//print actual sql
+spring.sharding.sqlShow=true
+```
 
 ## StrHash Sharding Algorithm
 StrHash algorithm is a function that you can use to substring part of sharding column value to route table partition.
@@ -47,7 +44,6 @@ Make data in partitions sharded more evenly than other hash algorithms in Shardi
 
 ### Configuration
 The following configuration are:
-| Name                                         | Description                                          |
-| -------------------------------------------- | ---------------------------------------------------- |
-| spring.sharding.algorithm.strHash.startIndex | Start position of sharding column value to substring |
-| spring.sharding.algorithm.strHash.endIndex   | End position of sharding column value to substring   |
+```xml
+spring.sharding.algorithm.AlgortihmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE
+```

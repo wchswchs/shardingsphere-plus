@@ -22,7 +22,7 @@ public class StrHashAlgorithmTest {
     public void testDoSharding4Substring() {
         strHashAlgorithm.setEndIndex(2);
         Assertions.assertEquals(
-                partitions.get(13),
+                partitions.get(27),
                 strHashAlgorithm.doSharding(partitions, preciseShardingValue)
         );
     }
@@ -31,7 +31,7 @@ public class StrHashAlgorithmTest {
     @DisplayName("整串分片测试")
     public void testDoSharding() {
         Assertions.assertEquals(
-                partitions.get(14),
+                partitions.get(20),
                 strHashAlgorithm.doSharding(partitions, preciseShardingValue)
         );
     }
@@ -48,10 +48,10 @@ public class StrHashAlgorithmTest {
     public void setUp() {
         String logicTable = "table";
         for (int i = 0; i < 32; i ++) {
-            partitions.add(logicTable + i);
+            partitions.add(logicTable + "_" + i);
         }
         String columnName = "column1";
-        String shardingValue = "S48c1fhv3s9l";
+        String shardingValue = "P0001";
         preciseShardingValue =
                 new PreciseShardingValue<>(logicTable, columnName, shardingValue);
 

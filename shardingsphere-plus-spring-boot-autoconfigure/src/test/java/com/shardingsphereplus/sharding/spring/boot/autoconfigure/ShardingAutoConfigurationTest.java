@@ -1,5 +1,6 @@
 package com.shardingsphereplus.sharding.spring.boot.autoconfigure;
 
+import com.shardingsphereplus.sharding.lib.algorithm.standard.StrHashAlgorithm;
 import org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource;
 import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
 import org.apache.shardingsphere.mode.manager.ContextManager;
@@ -47,14 +48,14 @@ public class ShardingAutoConfigurationTest {
                 .getRuleMetaData().getRules();
         for (ShardingSphereRule rule : rules) {
             if (rule instanceof ShardingRule) {
-                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
-                        .get("StrHash")
-                        .getProps().getProperty("startIndex"))
-                        .isEqualTo("-1");
-                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
-                        .get("StrHash")
-                        .getProps().getProperty("endIndex"))
-                        .isEqualTo("2");
+                Assertions.assertThat(
+                        ((StrHashAlgorithm)((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")).getStartIndex())
+                        .isEqualTo(-1);
+                Assertions.assertThat(
+                        ((StrHashAlgorithm)((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")).getEndIndex())
+                        .isEqualTo(-1);
             }
         }
     }
@@ -84,14 +85,32 @@ public class ShardingAutoConfigurationTest {
                 .getRuleMetaData().getRules();
         for (ShardingSphereRule rule : rules) {
             if (rule instanceof ShardingRule) {
-                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
-                        .get("StrHash")
-                        .getProps().getProperty("startIndex"))
-                        .isEqualTo("-1");
-                Assertions.assertThat(((ShardingRule) rule).getShardingAlgorithms()
-                        .get("StrHash")
-                        .getProps().getProperty("endIndex"))
-                        .isEqualTo("-1");
+                Assertions.assertThat(
+                        ((StrHashAlgorithm)((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")).getStartIndex())
+                        .isEqualTo(-1);
+                Assertions.assertThat(
+                        ((StrHashAlgorithm)((ShardingRule) rule).getShardingAlgorithms()
+                        .get("StrHash")).getEndIndex())
+                        .isEqualTo(-1);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("多表分片测试")
+    public void testMultiTableSharding() {
+        TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:user->StrHash[starIndex:1|endIndex:2],user_token->StrHash").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
+        context.register(ShardingAutoConfiguration.class);
+        context.refresh();
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().size()).isEqualTo(2);
             }
         }
     }

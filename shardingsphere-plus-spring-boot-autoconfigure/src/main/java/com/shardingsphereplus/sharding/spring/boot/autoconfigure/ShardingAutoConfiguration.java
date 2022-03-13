@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
 
 @Configuration
@@ -60,42 +58,20 @@ public class ShardingAutoConfiguration {
 
         ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
 
-        //build database
         String jdbcUrl = properties.getDatasource().getJdbcUrl();
         List<String> jdbcUrlUnits = Splitter.on("//").omitEmptyStrings().splitToList(jdbcUrl);
         String logicSchemaName = jdbcUrlUnits.get(1).split("/")[1].split("\\?")[0];
-        String actualDatabases;
-        if (properties.getDatasource().getDbPartitionNum() > 1) {
-            actualDatabases = String.format("%s%s${0..%d}.%s%s${0..%d}",
-                    logicSchemaName,
-                    properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getDbPartitionNum() - 1,
-                    properties.getDatasource().getLogicTable(),
-                    properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getTablePartitionNum() - 1);
-        } else {
-            actualDatabases = String.format("%s.%s%s${0..%d}",
-                    logicSchemaName,
-                    properties.getDatasource().getLogicTable(),
-                    properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getTablePartitionNum() - 1);
-        }
-        ShardingTableRuleConfiguration shardingTableRuleConfiguration = new ShardingTableRuleConfiguration(
-                properties.getDatasource().getLogicTable(),
-                actualDatabases
-        );
+        String[] logicTables = properties.getDatasource().getLogicTable().split(",");
 
         Map<String, DataSource> dataSourceMap = buildDatasource(logicSchemaName, jdbcUrl);
-        //sharding rule config
-        ShardingSphereAlgorithmConfiguration shardingSphereAlgorithmConfiguration = new ShardingSphereAlgorithmConfiguration(
-                        properties.getAlgorithm().getAlgorithmName(),
-                        getShardingProperties(properties.getAlgorithm().getAlgorithmName())
-        );
-        shardingRuleConfiguration.getShardingAlgorithms().put(properties.getAlgorithm().getAlgorithmName(), shardingSphereAlgorithmConfiguration);
-        shardingTableRuleConfiguration.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
-                properties.getAlgorithm().getShardingColumn(),
-                properties.getAlgorithm().getAlgorithmName()));
-        shardingRuleConfiguration.getTables().add(shardingTableRuleConfiguration);
+        Map<String, String> usedShardingAlgorithm = new HashMap<>();
+        buildUsedShardingAlgorithms(logicTables, usedShardingAlgorithm);
+        registerTableRule(
+                getShardingAlgorithmMapping(logicTables),
+                getShardingColumnMapping(logicTables),
+                getShardingActualNodeMapping(logicTables, logicSchemaName),
+                logicTables, shardingRuleConfiguration);
+        registerShardingAlgorithms(usedShardingAlgorithm, shardingRuleConfiguration);
 
         //build common properties
         Properties commonProperties = new Properties();
@@ -106,7 +82,6 @@ public class ShardingAutoConfiguration {
 
     private Map<String, DataSource> buildDatasource(String logicSchemaName, String jdbcUrl) {
         Map<String, DataSource> dataSourceMap = new HashMap<>();
-
         for (int i = 0; i < properties.getDatasource().getDbPartitionNum(); i ++) {
             DruidDataSource dataSource = new DruidDataSource();
             dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
@@ -125,17 +100,126 @@ public class ShardingAutoConfiguration {
         return dataSourceMap;
     }
 
-    private Properties getShardingProperties(String shardingAlgorithmName) throws Exception {
-        Class<?> algorithmConfigClazz = Class.forName(properties.getClass().getName() + "$" + shardingAlgorithmName);
-        Method algorithmConfigMethod = properties.getAlgorithm().getClass().getMethod("get" + shardingAlgorithmName);
-        Object algorithmConfigObj = algorithmConfigMethod.invoke(properties.getAlgorithm());
+    private void registerTableRule(Map<String, String> shardingAlgorithmMap,
+                                   Map<String, String> shardingColumnMap,
+                                   Map<String, String> shardingActualNodeMap,
+                                   String[] logicTables,
+                                   ShardingRuleConfiguration shardingRuleConfiguration) {
+        for (String logicTable : logicTables) {
+            shardingRuleConfiguration.getTables().add(
+                    buildTableRuleConfiguration(logicTable, shardingActualNodeMap.get(logicTable),
+                            shardingAlgorithmMap.get(logicTable),
+                            shardingColumnMap.get(logicTable))
+            );
+        }
+    }
+
+    private ShardingTableRuleConfiguration buildTableRuleConfiguration(String logicTable, String actualNodes,
+                                                                       String shardingAlgorithm, String shardingColumn) {
+        ShardingTableRuleConfiguration shardingTableRuleConfiguration = new ShardingTableRuleConfiguration(
+                logicTable,
+                actualNodes
+        );
+        shardingTableRuleConfiguration.setTableShardingStrategy(new StandardShardingStrategyConfiguration(
+                shardingColumn,
+                shardingAlgorithm)
+        );
+        return shardingTableRuleConfiguration;
+    }
+
+    private void registerShardingAlgorithms(Map<String, String> usedShardingAlgorithm,
+                                            ShardingRuleConfiguration shardingRuleConfiguration) throws Exception {
+        for (final Map.Entry<String, String> shardingAlgorithm : usedShardingAlgorithm.entrySet()) {
+            ShardingSphereAlgorithmConfiguration shardingSphereAlgorithmConfiguration =
+                    new ShardingSphereAlgorithmConfiguration(
+                            shardingAlgorithm.getKey(),
+                            getShardingProperties(shardingAlgorithm.getValue())
+                    );
+            shardingRuleConfiguration.getShardingAlgorithms().put(shardingAlgorithm.getKey(), shardingSphereAlgorithmConfiguration);
+        }
+    }
+
+    private Properties getShardingProperties(String shardingAlgorithmPropertiesStr) {
         Properties shardingAlgorithmProperties = new Properties();
-        for (Field field : algorithmConfigClazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            shardingAlgorithmProperties.setProperty(field.getName(), field.get(algorithmConfigObj).toString());
-            shardingAlgorithmProperties.setProperty("partitionJoinDelimiter", properties.getPartitionJoinDelimiter());
+        if (StringUtils.isNotEmpty(shardingAlgorithmPropertiesStr)) {
+            for (final Map.Entry<String, String> property : Splitter.on("|").withKeyValueSeparator(":").split(shardingAlgorithmPropertiesStr).entrySet()) {
+                shardingAlgorithmProperties.setProperty(property.getKey(), property.getValue());
+                shardingAlgorithmProperties.setProperty("partitionJoinDelimiter", properties.getPartitionJoinDelimiter());
+            }
         }
         return shardingAlgorithmProperties;
+    }
+
+    private Map<String, String> getShardingAlgorithmMapping(String[] logicTables) {
+        Map<String, String> shardingAlgorithmMap = new HashMap<>();
+        if (logicTables.length > 1) {
+            Map<String, String> shardingAlgorithmMapping = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
+                    .split(properties.getAlgorithm().getAlgorithmName());
+            for (final Map.Entry<String, String> shardingAlgorithm : shardingAlgorithmMapping.entrySet()) {
+                shardingAlgorithmMap.put(shardingAlgorithm.getKey(), shardingAlgorithm.getValue().split("\\[")[0]);
+            }
+        } else {
+            shardingAlgorithmMap.put(properties.getDatasource().getLogicTable(),
+                    StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["));
+        }
+        return shardingAlgorithmMap;
+    }
+
+    private void buildUsedShardingAlgorithms(String[] logicTables, Map<String, String> usedShardingAlgorithm) {
+        if (logicTables.length > 1) {
+            Map<String, String> shardingAlgorithmMap = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
+                    .split(properties.getAlgorithm().getAlgorithmName());
+            for (String logicTable : logicTables) {
+                String algorithmName = StringUtils.substringBefore(shardingAlgorithmMap.get(logicTable), "[");
+                if (!usedShardingAlgorithm.containsKey(algorithmName)) {
+                    String algorithmProperties = StringUtils.substringBetween(shardingAlgorithmMap.get(logicTable), "[", "]");
+                    usedShardingAlgorithm.put(algorithmName, algorithmProperties);
+                }
+            }
+        } else {
+            String algorithmProperties = StringUtils.substringBetween(properties.getAlgorithm().getAlgorithmName(), "[", "]");
+            usedShardingAlgorithm.put(StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["), algorithmProperties);
+        }
+    }
+
+    private Map<String, String> getShardingColumnMapping(String[] logicTables) {
+        Map<String, String> shardingColumnMap = new HashMap<>();
+        if (logicTables.length > 1) {
+            shardingColumnMap = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
+                    .split(properties.getAlgorithm().getShardingColumn());
+        } else {
+            shardingColumnMap.put(properties.getDatasource().getLogicTable(),
+                    properties.getAlgorithm().getShardingColumn());
+        }
+        return shardingColumnMap;
+    }
+
+    private Map<String, String> getShardingActualNodeMapping(String[] logicTables, String logicSchemaName) {
+        Map<String, String> actualShardingNodeMap = new HashMap<>();
+        for (String logicTable : logicTables) {
+            actualShardingNodeMap.put(logicTable, getActualNodeConfiguration(logicTable, logicSchemaName));
+        }
+        return actualShardingNodeMap;
+    }
+
+    private String getActualNodeConfiguration(String logicTable, String logicSchemaName) {
+        String actualDatabases;
+        if (properties.getDatasource().getDbPartitionNum() > 1) {
+            actualDatabases = String.format("%s%s${0..%d}.%s%s${0..%d}",
+                    logicSchemaName,
+                    properties.getPartitionJoinDelimiter(),
+                    properties.getDatasource().getDbPartitionNum() - 1,
+                    logicTable,
+                    properties.getPartitionJoinDelimiter(),
+                    properties.getDatasource().getTablePartitionNum() - 1);
+        } else {
+            actualDatabases = String.format("%s.%s%s${0..%d}",
+                    logicSchemaName,
+                    logicTable,
+                    properties.getPartitionJoinDelimiter(),
+                    properties.getDatasource().getTablePartitionNum() - 1);
+        }
+        return actualDatabases;
     }
 
 }
