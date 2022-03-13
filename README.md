@@ -49,7 +49,7 @@ spring.sharding.algorithm.AlgortihmName=user->StrHash[startIndex:1|endIndex:2],u
 ```
 ### Benchmark
 ```text
-Benchmark                              Mode  Cnt         Score        Error  Units
-StrHashAlgorithmBenchmark.doSharding  thrpt    5  10973251.782 ± 732033.500  ops/s
-StrHashAlgorithmBenchmark.doSharding   avgt    5        ≈ 10⁻⁶                s/op
+Benchmark                              Mode  Cnt         Score         Error  Units
+StrHashAlgorithmBenchmark.doSharding  thrpt    5  10222628.045 ± 1914287.262  ops/s
+StrHashAlgorithmBenchmark.doSharding   avgt    5        ≈ 10⁻⁶                 s/op
 ```
