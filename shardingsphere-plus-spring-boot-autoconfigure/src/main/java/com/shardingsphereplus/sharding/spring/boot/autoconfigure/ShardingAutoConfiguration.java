@@ -3,7 +3,6 @@ package com.shardingsphereplus.sharding.spring.boot.autoconfigure;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
 import org.apache.shardingsphere.infra.config.RuleConfiguration;
