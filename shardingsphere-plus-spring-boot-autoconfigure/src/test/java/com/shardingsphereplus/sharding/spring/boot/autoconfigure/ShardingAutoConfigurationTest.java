@@ -28,6 +28,7 @@ public class ShardingAutoConfigurationTest {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.username:root").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.password:123456").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user_name").applyTo(context);
     }
 
     @AfterEach
@@ -102,6 +103,24 @@ public class ShardingAutoConfigurationTest {
     public void testMultiTableSharding() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.algorithmName:user->StrHash[starIndex:1|endIndex:2],user_token->StrHash").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
+        context.register(ShardingAutoConfiguration.class);
+        context.refresh();
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().size()).isEqualTo(2);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("多表同一分片测试")
+    public void testMultiTableSameSharding() {
+        TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();

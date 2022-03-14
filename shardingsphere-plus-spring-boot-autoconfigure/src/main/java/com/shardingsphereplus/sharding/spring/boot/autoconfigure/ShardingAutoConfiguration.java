@@ -55,6 +55,11 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.dbPartitionNum can not lower than 1"
             );
         }
+        if (StringUtils.isEmpty(properties.getAlgorithm().getShardingColumn())) {
+            throw new IllegalArgumentException(
+                    "configuration item spring.sharding.algorithm.shardingColumn can not be empty"
+            );
+        }
 
         ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
 
@@ -62,13 +67,15 @@ public class ShardingAutoConfiguration {
         List<String> jdbcUrlUnits = Splitter.on("//").omitEmptyStrings().splitToList(jdbcUrl);
         String logicSchemaName = jdbcUrlUnits.get(1).split("/")[1].split("\\?")[0];
         String[] logicTables = properties.getDatasource().getLogicTable().split(",");
+        String[] shardingAlgorithmItems = properties.getAlgorithm().getAlgorithmName().split(",");
+        String[] shardingColumnItems = properties.getAlgorithm().getShardingColumn().split(",");
 
         Map<String, DataSource> dataSourceMap = buildDatasource(logicSchemaName, jdbcUrl);
         Map<String, String> usedShardingAlgorithm = new HashMap<>();
-        buildUsedShardingAlgorithms(logicTables, usedShardingAlgorithm);
+        buildUsedShardingAlgorithms(shardingAlgorithmItems, usedShardingAlgorithm);
         registerTableRule(
-                getShardingAlgorithmMapping(logicTables),
-                getShardingColumnMapping(logicTables),
+                getShardingAlgorithmMapping(logicTables, shardingAlgorithmItems),
+                getShardingColumnMapping(shardingColumnItems),
                 getShardingActualNodeMapping(logicTables, logicSchemaName),
                 logicTables, shardingRuleConfiguration);
         registerShardingAlgorithms(usedShardingAlgorithm, shardingRuleConfiguration);
@@ -150,29 +157,29 @@ public class ShardingAutoConfiguration {
         return shardingAlgorithmProperties;
     }
 
-    private Map<String, String> getShardingAlgorithmMapping(String[] logicTables) {
+    private Map<String, String> getShardingAlgorithmMapping(String[] logicTables, String[] shardingAlgorithmItems) {
         Map<String, String> shardingAlgorithmMap = new HashMap<>();
-        if (logicTables.length > 1) {
-            Map<String, String> shardingAlgorithmMapping = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
-                    .split(properties.getAlgorithm().getAlgorithmName());
-            for (final Map.Entry<String, String> shardingAlgorithm : shardingAlgorithmMapping.entrySet()) {
-                shardingAlgorithmMap.put(shardingAlgorithm.getKey(), shardingAlgorithm.getValue().split("\\[")[0]);
+        if (shardingAlgorithmItems.length > 1) {
+            for (String item: shardingAlgorithmItems) {
+                String[] algorithmItem = item.split("->");
+                shardingAlgorithmMap.put(algorithmItem[0], StringUtils.substringBefore(algorithmItem[1], "["));
             }
         } else {
-            shardingAlgorithmMap.put(properties.getDatasource().getLogicTable(),
-                    StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["));
+            for (String logicTable : logicTables) {
+                shardingAlgorithmMap.put(logicTable,
+                        StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["));
+            }
         }
         return shardingAlgorithmMap;
     }
 
-    private void buildUsedShardingAlgorithms(String[] logicTables, Map<String, String> usedShardingAlgorithm) {
-        if (logicTables.length > 1) {
-            Map<String, String> shardingAlgorithmMap = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
-                    .split(properties.getAlgorithm().getAlgorithmName());
-            for (String logicTable : logicTables) {
-                String algorithmName = StringUtils.substringBefore(shardingAlgorithmMap.get(logicTable), "[");
+    private void buildUsedShardingAlgorithms(String[] shardingAlgorithmItems, Map<String, String> usedShardingAlgorithm) {
+        if (shardingAlgorithmItems.length > 1) {
+            for (String item : shardingAlgorithmItems) {
+                String[] algorithmItem = item.split("->");
+                String algorithmName = StringUtils.substringBefore(algorithmItem[1], "[");
                 if (!usedShardingAlgorithm.containsKey(algorithmName)) {
-                    String algorithmProperties = StringUtils.substringBetween(shardingAlgorithmMap.get(logicTable), "[", "]");
+                    String algorithmProperties = StringUtils.substringBetween(algorithmItem[1], "[", "]");
                     usedShardingAlgorithm.put(algorithmName, algorithmProperties);
                 }
             }
@@ -182,11 +189,13 @@ public class ShardingAutoConfiguration {
         }
     }
 
-    private Map<String, String> getShardingColumnMapping(String[] logicTables) {
+    private Map<String, String> getShardingColumnMapping(String[] shardingColumns) {
         Map<String, String> shardingColumnMap = new HashMap<>();
-        if (logicTables.length > 1) {
-            shardingColumnMap = Splitter.on(",").omitEmptyStrings().withKeyValueSeparator("->")
-                    .split(properties.getAlgorithm().getShardingColumn());
+        if (shardingColumns.length > 1) {
+            for (String column : shardingColumns) {
+                String[] columnMap = column.split("->");
+                shardingColumnMap.put(columnMap[0], columnMap[1]);
+            }
         } else {
             shardingColumnMap.put(properties.getDatasource().getLogicTable(),
                     properties.getAlgorithm().getShardingColumn());
