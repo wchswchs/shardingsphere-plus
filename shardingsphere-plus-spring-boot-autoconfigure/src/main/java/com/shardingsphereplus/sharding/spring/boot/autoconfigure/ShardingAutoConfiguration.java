@@ -50,9 +50,9 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.tablePartitionNum can not lower than 1"
             );
         }
-        if (properties.getDatasource().getTablePartitionNum() < 1) {
+        if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())) {
             throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.dbPartitionNum can not lower than 1"
+                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty"
             );
         }
         if (StringUtils.isEmpty(properties.getAlgorithm().getShardingColumn())) {
@@ -67,8 +67,9 @@ public class ShardingAutoConfiguration {
         List<String> jdbcUrlUnits = Splitter.on("//").omitEmptyStrings().splitToList(jdbcUrl);
         String logicSchemaName = jdbcUrlUnits.get(1).split("/")[1].split("\\?")[0];
         String[] logicTables = properties.getDatasource().getLogicTable().split(",");
-        String[] shardingAlgorithmItems = properties.getAlgorithm().getAlgorithmName().split(",");
+        String[] shardingAlgorithmItems = properties.getAlgorithm().getShardingAlgorithmName().split(",");
         String[] shardingColumnItems = properties.getAlgorithm().getShardingColumn().split(",");
+        String[] tablePartitionNumItems = properties.getDatasource().getTablePartitionNum().split(",");
 
         Map<String, DataSource> dataSourceMap = buildDatasource(logicSchemaName, jdbcUrl);
         Map<String, String> usedShardingAlgorithm = new HashMap<>();
@@ -76,7 +77,7 @@ public class ShardingAutoConfiguration {
         registerTableRule(
                 getShardingAlgorithmMapping(logicTables, shardingAlgorithmItems),
                 getShardingColumnMapping(shardingColumnItems),
-                getShardingActualNodeMapping(logicTables, logicSchemaName),
+                getShardingActualNodeMapping(logicTables, logicSchemaName, tablePartitionNumItems),
                 logicTables, shardingRuleConfiguration);
         registerShardingAlgorithms(usedShardingAlgorithm, shardingRuleConfiguration);
 
@@ -135,7 +136,7 @@ public class ShardingAutoConfiguration {
     }
 
     private void registerShardingAlgorithms(Map<String, String> usedShardingAlgorithm,
-                                            ShardingRuleConfiguration shardingRuleConfiguration) throws Exception {
+                                            ShardingRuleConfiguration shardingRuleConfiguration) {
         for (final Map.Entry<String, String> shardingAlgorithm : usedShardingAlgorithm.entrySet()) {
             ShardingSphereAlgorithmConfiguration shardingSphereAlgorithmConfiguration =
                     new ShardingSphereAlgorithmConfiguration(
@@ -167,7 +168,7 @@ public class ShardingAutoConfiguration {
         } else {
             for (String logicTable : logicTables) {
                 shardingAlgorithmMap.put(logicTable,
-                        StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["));
+                        StringUtils.substringBefore(shardingAlgorithmItems[0], "["));
             }
         }
         return shardingAlgorithmMap;
@@ -184,8 +185,8 @@ public class ShardingAutoConfiguration {
                 }
             }
         } else {
-            String algorithmProperties = StringUtils.substringBetween(properties.getAlgorithm().getAlgorithmName(), "[", "]");
-            usedShardingAlgorithm.put(StringUtils.substringBefore(properties.getAlgorithm().getAlgorithmName(), "["), algorithmProperties);
+            String algorithmProperties = StringUtils.substringBetween(shardingAlgorithmItems[0], "[", "]");
+            usedShardingAlgorithm.put(StringUtils.substringBefore(shardingAlgorithmItems[0], "["), algorithmProperties);
         }
     }
 
@@ -203,15 +204,26 @@ public class ShardingAutoConfiguration {
         return shardingColumnMap;
     }
 
-    private Map<String, String> getShardingActualNodeMapping(String[] logicTables, String logicSchemaName) {
+    private Map<String, String> getShardingActualNodeMapping(String[] logicTables, String logicSchemaName, String[] tablePartitionNumItems) {
         Map<String, String> actualShardingNodeMap = new HashMap<>();
         for (String logicTable : logicTables) {
-            actualShardingNodeMap.put(logicTable, getActualNodeConfiguration(logicTable, logicSchemaName));
+            if (tablePartitionNumItems.length > 1) {
+                for (String partitionNum : tablePartitionNumItems) {
+                    String[] partitionPair = partitionNum.split("->");
+                    if (partitionPair[0].equals(logicTable)) {
+                        actualShardingNodeMap.put(logicTable,
+                                getActualNodeConfiguration(logicTable, logicSchemaName, Integer.parseInt(partitionPair[1])));
+                    }
+                }
+            } else {
+                actualShardingNodeMap.put(logicTable,
+                        getActualNodeConfiguration(logicTable, logicSchemaName, Integer.parseInt(tablePartitionNumItems[0])));
+            }
         }
         return actualShardingNodeMap;
     }
 
-    private String getActualNodeConfiguration(String logicTable, String logicSchemaName) {
+    private String getActualNodeConfiguration(String logicTable, String logicSchemaName, int tablePartitionNum) {
         String actualDatabases;
         if (properties.getDatasource().getDbPartitionNum() > 1) {
             actualDatabases = String.format("%s%s${0..%d}.%s%s${0..%d}",
@@ -220,13 +232,13 @@ public class ShardingAutoConfiguration {
                     properties.getDatasource().getDbPartitionNum() - 1,
                     logicTable,
                     properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getTablePartitionNum() - 1);
+                    tablePartitionNum - 1);
         } else {
             actualDatabases = String.format("%s.%s%s${0..%d}",
                     logicSchemaName,
                     logicTable,
                     properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getTablePartitionNum() - 1);
+                    tablePartitionNum - 1);
         }
         return actualDatabases;
     }

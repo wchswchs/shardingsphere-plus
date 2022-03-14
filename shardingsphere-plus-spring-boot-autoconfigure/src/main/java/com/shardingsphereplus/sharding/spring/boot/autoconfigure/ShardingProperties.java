@@ -7,6 +7,7 @@ public class ShardingProperties {
 
     private final Algorithm algorithm = new Algorithm();
     private Datasource datasource = new Datasource();
+
     private String partitionJoinDelimiter = "_";
     private String sqlShow = "false";
 
@@ -39,20 +40,12 @@ public class ShardingProperties {
     }
 
     public static class Datasource {
-        private int tablePartitionNum = 2;
         private int dbPartitionNum = 1;
+        private String tablePartitionNum = "2";
         private String jdbcUrl;
         private String username;
         private String password;
         private String logicTable;
-
-        public int getTablePartitionNum() {
-            return tablePartitionNum;
-        }
-
-        public void setTablePartitionNum(int tablePartitionNum) {
-            this.tablePartitionNum = tablePartitionNum;
-        }
 
         public int getDbPartitionNum() {
             return dbPartitionNum;
@@ -60,6 +53,14 @@ public class ShardingProperties {
 
         public void setDbPartitionNum(int dbPartitionNum) {
             this.dbPartitionNum = dbPartitionNum;
+        }
+
+        public String getTablePartitionNum() {
+            return tablePartitionNum;
+        }
+
+        public void setTablePartitionNum(String tablePartitionNum) {
+            this.tablePartitionNum = tablePartitionNum;
         }
 
         public String getJdbcUrl() {
@@ -97,7 +98,7 @@ public class ShardingProperties {
 
     public static class Algorithm {
         private String shardingColumn;
-        private String algorithmName = "StrHash";
+        private String shardingAlgorithmName = "StrHash";
 
         public String getShardingColumn() {
             return shardingColumn;
@@ -107,12 +108,12 @@ public class ShardingProperties {
             this.shardingColumn = shardingColumn;
         }
 
-        public String getAlgorithmName() {
-            return algorithmName;
+        public String getShardingAlgorithmName() {
+            return shardingAlgorithmName;
         }
 
-        public void setAlgorithmName(String algorithmName) {
-            this.algorithmName = algorithmName;
+        public void setShardingAlgorithmName(String shardingAlgorithmName) {
+            this.shardingAlgorithmName = shardingAlgorithmName;
         }
     }
 

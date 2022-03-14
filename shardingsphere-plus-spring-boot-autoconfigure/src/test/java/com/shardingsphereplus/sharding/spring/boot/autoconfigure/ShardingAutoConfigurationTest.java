@@ -41,7 +41,7 @@ public class ShardingAutoConfigurationTest {
     @Test
     @DisplayName("分片算法配置参数测试")
     public void testAlgorithm() {
-        TestPropertyValues.of("spring.sharding.algorithm.StrHash.endIndex:2").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingAlgorithmName:StrHash[endIndex:2]").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
         ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
@@ -56,7 +56,7 @@ public class ShardingAutoConfigurationTest {
                 Assertions.assertThat(
                         ((StrHashAlgorithm)((ShardingRule) rule).getShardingAlgorithms()
                         .get("StrHash")).getEndIndex())
-                        .isEqualTo(-1);
+                        .isEqualTo(2);
             }
         }
     }
@@ -77,8 +77,8 @@ public class ShardingAutoConfigurationTest {
     }
 
     @Test
-    @DisplayName("无配置参数测试")
-    public void testNon() {
+    @DisplayName("默认分片配置参数测试")
+    public void testDefaultSharding() {
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
         ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
@@ -99,7 +99,7 @@ public class ShardingAutoConfigurationTest {
     }
 
     @Test
-    @DisplayName("多表分片测试")
+    @DisplayName("多表不同分片测试")
     public void testMultiTableSharding() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.algorithmName:user->StrHash[starIndex:1|endIndex:2],user_token->StrHash").applyTo(context);
@@ -130,6 +130,46 @@ public class ShardingAutoConfigurationTest {
         for (ShardingSphereRule rule : rules) {
             if (rule instanceof ShardingRule) {
                 Assertions.assertThat(((ShardingRule) rule).getTableRules().size()).isEqualTo(2);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("多表不同分片数测试")
+    public void testMultiTableDiffPartitionNum() {
+        TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.datasource.tablePartitionNum:user->16,user_token->32").applyTo(context);
+        context.register(ShardingAutoConfiguration.class);
+        context.refresh();
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().get("user").getActualDataNodes().size()).isEqualTo(16);
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().get("user_token").getActualDataNodes().size()).isEqualTo(32);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("多表同一分片数测试")
+    public void testMultiTableSamePartitionNum() {
+        TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
+        TestPropertyValues.of("spring.sharding.datasource.tablePartitionNum:32").applyTo(context);
+        context.register(ShardingAutoConfiguration.class);
+        context.refresh();
+        ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
+        Collection<ShardingSphereRule> rules = contextManager.getMetaDataContexts().getMetaData("test")
+                .getRuleMetaData().getRules();
+        for (ShardingSphereRule rule : rules) {
+            if (rule instanceof ShardingRule) {
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().get("user").getActualDataNodes().size()).isEqualTo(32);
+                Assertions.assertThat(((ShardingRule) rule).getTableRules().get("user_token").getActualDataNodes().size()).isEqualTo(32);
             }
         }
     }
