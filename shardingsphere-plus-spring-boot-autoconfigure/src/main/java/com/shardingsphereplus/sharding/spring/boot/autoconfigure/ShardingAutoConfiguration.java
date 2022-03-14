@@ -94,7 +94,7 @@ public class ShardingAutoConfiguration {
                 && StringUtils.isNotEmpty(properties.getDatasource().getReadDatasource())) {
             ruleConfigurations.add(
                     buildReadWriteRuleConfiguration(properties.getDatasource().getReadDatasource(),
-                    properties.getDatasource().getWriteDatasource())
+                    properties.getDatasource().getWriteDatasource(), logicDbName)
             );
         }
 
@@ -128,9 +128,13 @@ public class ShardingAutoConfiguration {
         return dataSourceMap;
     }
 
-    private ReadwriteSplittingRuleConfiguration buildReadWriteRuleConfiguration(String readDatasource, String writeDatasource) {
+    private ReadwriteSplittingRuleConfiguration buildReadWriteRuleConfiguration(String readDatasource, String writeDatasource, String logicDbName) {
         Properties readWriteProperties = new Properties();
-        readWriteProperties.setProperty("read-data-source-names", readDatasource);
+        List<String> readDatasouces = new ArrayList<>();
+        for (String readDatasourceItem : readDatasource.split(",")) {
+            readDatasouces.add(StringUtils.joinWith(properties.getPartitionJoinDelimiter(), logicDbName, readDatasource));
+        }
+        readWriteProperties.setProperty("read-data-source-names", Joiner.on(",").join(readDatasouces));
         readWriteProperties.setProperty("write-data-source-name", writeDatasource);
         ReadwriteSplittingDataSourceRuleConfiguration dataSourceConfig =
                 new ReadwriteSplittingDataSourceRuleConfiguration("default", "Static",
