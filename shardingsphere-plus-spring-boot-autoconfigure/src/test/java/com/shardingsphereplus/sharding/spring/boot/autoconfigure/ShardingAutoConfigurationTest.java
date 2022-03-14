@@ -24,7 +24,8 @@ public class ShardingAutoConfigurationTest {
     @BeforeEach
     void init() {
         this.context = new AnnotationConfigApplicationContext();
-        TestPropertyValues.of("spring.sharding.datasource.jdbcUrl:jdbc:mysql://localhost:3306/test").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.datasource.dbAddress:localhost:3306").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.datasource.logicDbName:test").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.username:root").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.password:123456").applyTo(this.context);
@@ -41,7 +42,7 @@ public class ShardingAutoConfigurationTest {
     @Test
     @DisplayName("分片算法配置参数测试")
     public void testAlgorithm() {
-        TestPropertyValues.of("spring.sharding.algorithm.shardingAlgorithmName:StrHash[endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingTableAlgorithmName:StrHash[endIndex:2]").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
         ContextManager contextManager = context.getBean(ShardingSphereDataSource.class).getContextManager();
@@ -64,7 +65,7 @@ public class ShardingAutoConfigurationTest {
     @Test
     @DisplayName("分库配置参数测试")
     public void testDbPartitionNum() {
-        TestPropertyValues.of("spring.sharding.datasource.dbPartitionNum:2").applyTo(context);
+        TestPropertyValues.of("spring.sharding.datasource.dbAddress:localhost:3306,localhost:3307").applyTo(this.context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
         String schemaName = context.getBean(ShardingSphereDataSource.class).getSchemaName();
@@ -102,7 +103,7 @@ public class ShardingAutoConfigurationTest {
     @DisplayName("多表不同分片测试")
     public void testMultiTableSharding() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
-        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:user->StrHash[starIndex:1|endIndex:2],user_token->StrHash").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingTableAlgorithmName:user->StrHash[starIndex:1|endIndex:2],user_token->StrHash").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
@@ -120,7 +121,7 @@ public class ShardingAutoConfigurationTest {
     @DisplayName("多表同一分片测试")
     public void testMultiTableSameSharding() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
-        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingTableAlgorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
@@ -138,7 +139,7 @@ public class ShardingAutoConfigurationTest {
     @DisplayName("多表不同分片数测试")
     public void testMultiTableDiffPartitionNum() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
-        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingTableAlgorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
         TestPropertyValues.of("spring.sharding.datasource.tablePartitionNum:user->16,user_token->32").applyTo(context);
         context.register(ShardingAutoConfiguration.class);
@@ -158,7 +159,7 @@ public class ShardingAutoConfigurationTest {
     @DisplayName("多表同一分片数测试")
     public void testMultiTableSamePartitionNum() {
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user,user_token").applyTo(context);
-        TestPropertyValues.of("spring.sharding.algorithm.algorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
+        TestPropertyValues.of("spring.sharding.algorithm.shardingTableAlgorithmName:StrHash[starIndex:1|endIndex:2]").applyTo(context);
         TestPropertyValues.of("spring.sharding.algorithm.shardingColumn:user->user_name,user_token->token").applyTo(context);
         TestPropertyValues.of("spring.sharding.datasource.tablePartitionNum:32").applyTo(context);
         context.register(ShardingAutoConfiguration.class);

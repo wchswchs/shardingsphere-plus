@@ -1,10 +1,15 @@
 package com.shardingsphereplus.sharding.spring.boot.autoconfigure;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
+import org.apache.shardingsphere.infra.config.RuleConfiguration;
 import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration;
+import org.apache.shardingsphere.readwritesplitting.api.ReadwriteSplittingRuleConfiguration;
+import org.apache.shardingsphere.readwritesplitting.api.rule.ReadwriteSplittingDataSourceRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.strategy.sharding.StandardShardingStrategyConfiguration;
@@ -27,8 +32,11 @@ public class ShardingAutoConfiguration {
 
     @Bean
     public DataSource dataSource() throws Exception {
-        if (StringUtils.isEmpty(properties.getDatasource().getJdbcUrl())) {
-            throw new IllegalArgumentException("configuration item spring.sharding.datasource.jdbcUrl can not be empty");
+        if (StringUtils.isEmpty(properties.getDatasource().getDbAddress())) {
+            throw new IllegalArgumentException("configuration item spring.sharding.datasource.dbAddress can not be empty");
+        }
+        if (StringUtils.isEmpty(properties.getDatasource().getLogicDbName())) {
+            throw new IllegalArgumentException("configuration item spring.sharding.datasource.logicDbName can not be empty");
         }
         if (StringUtils.isEmpty(properties.getDatasource().getLogicTable())) {
             throw new IllegalArgumentException(
@@ -45,11 +53,6 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.password can not be empty"
             );
         }
-        if (properties.getDatasource().getDbPartitionNum() < 1) {
-            throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.tablePartitionNum can not lower than 1"
-            );
-        }
         if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())) {
             throw new IllegalArgumentException(
                     "configuration item spring.sharding.datasource.dbPartitionNum can not be empty"
@@ -63,49 +66,80 @@ public class ShardingAutoConfiguration {
 
         ShardingRuleConfiguration shardingRuleConfiguration = new ShardingRuleConfiguration();
 
-        String jdbcUrl = properties.getDatasource().getJdbcUrl();
-        List<String> jdbcUrlUnits = Splitter.on("//").omitEmptyStrings().splitToList(jdbcUrl);
-        String logicSchemaName = jdbcUrlUnits.get(1).split("/")[1].split("\\?")[0];
+        String[] dbAddresses = properties.getDatasource().getDbAddress().split(",");
+        String logicDbName = properties.getDatasource().getLogicDbName();
         String[] logicTables = properties.getDatasource().getLogicTable().split(",");
-        String[] shardingAlgorithmItems = properties.getAlgorithm().getShardingAlgorithmName().split(",");
+        String[] shardingTableAlgorithmItems = properties.getAlgorithm().getShardingTableAlgorithmName().split(",");
         String[] shardingColumnItems = properties.getAlgorithm().getShardingColumn().split(",");
         String[] tablePartitionNumItems = properties.getDatasource().getTablePartitionNum().split(",");
 
-        Map<String, DataSource> dataSourceMap = buildDatasource(logicSchemaName, jdbcUrl);
+        Map<String, DataSource> dataSourceMap = buildDatasource(
+                logicDbName, dbAddresses,
+                properties.getDatasource().getCharacterEncoding(),
+                properties.getDatasource().isRewriteBatchedStatements());
+
         Map<String, String> usedShardingAlgorithm = new HashMap<>();
-        buildUsedShardingAlgorithms(shardingAlgorithmItems, usedShardingAlgorithm);
+        buildUsedShardingAlgorithms(shardingTableAlgorithmItems, usedShardingAlgorithm);
         registerTableRule(
-                getShardingAlgorithmMapping(logicTables, shardingAlgorithmItems),
+                getShardingAlgorithmMapping(logicTables, shardingTableAlgorithmItems),
                 getShardingColumnMapping(shardingColumnItems),
-                getShardingActualNodeMapping(logicTables, logicSchemaName, tablePartitionNumItems),
+                getShardingActualNodeMapping(logicTables, logicDbName, tablePartitionNumItems, dbAddresses),
                 logicTables, shardingRuleConfiguration);
         registerShardingAlgorithms(usedShardingAlgorithm, shardingRuleConfiguration);
+
+        List<RuleConfiguration> ruleConfigurations = new ArrayList<>();
+
+        ruleConfigurations.add(shardingRuleConfiguration);
+        if (StringUtils.isNotEmpty(properties.getDatasource().getReadDatasource())
+                && StringUtils.isNotEmpty(properties.getDatasource().getReadDatasource())) {
+            ruleConfigurations.add(
+                    buildReadWriteRuleConfiguration(properties.getDatasource().getReadDatasource(),
+                    properties.getDatasource().getWriteDatasource())
+            );
+        }
 
         //build common properties
         Properties commonProperties = new Properties();
         commonProperties.setProperty("sql-show", properties.getSqlShow());
 
-        return ShardingSphereDataSourceFactory.createDataSource(logicSchemaName, dataSourceMap, Collections.singleton(shardingRuleConfiguration), commonProperties);
+        return ShardingSphereDataSourceFactory.createDataSource(logicDbName, dataSourceMap, ruleConfigurations, commonProperties);
     }
 
-    private Map<String, DataSource> buildDatasource(String logicSchemaName, String jdbcUrl) {
+    private Map<String, DataSource> buildDatasource(String logicDbName, String[] dbAddresses, String characterEncoding,
+                                                    boolean rewriteBatchedStatements) {
         Map<String, DataSource> dataSourceMap = new HashMap<>();
-        for (int i = 0; i < properties.getDatasource().getDbPartitionNum(); i ++) {
+        int i = 0;
+        for (String address : dbAddresses) {
             DruidDataSource dataSource = new DruidDataSource();
             dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
-            String schemaName;
-            if (properties.getDatasource().getDbPartitionNum() > 1) {
-                schemaName = logicSchemaName + properties.getPartitionJoinDelimiter() + i;
-                dataSource.setUrl(jdbcUrl.replace(logicSchemaName, schemaName));
-            } else {
-                schemaName = logicSchemaName;
-                dataSource.setUrl(jdbcUrl);
-            }
+            String schemaName = logicDbName + properties.getPartitionJoinDelimiter() + i;
+            String jdbcAddress = StringUtils.joinWith("//", "jdbc:mysql:", address);
+            String jdbcUrl = StringUtils.joinWith("/", jdbcAddress, logicDbName);
+            String characterEncodingParam = StringUtils.joinWith("=", "characterEncoding", characterEncoding);
+            String rewriteBatchedStatementsParam = StringUtils.joinWith("=", "rewriteBatchedStatements", rewriteBatchedStatements);
+            String jdbcParams = StringUtils.joinWith("&", characterEncodingParam, rewriteBatchedStatementsParam);
+            dataSource.setUrl(StringUtils.joinWith("?", jdbcUrl, jdbcParams));
             dataSource.setUsername(properties.getDatasource().getUsername());
             dataSource.setPassword(properties.getDatasource().getPassword());
             dataSourceMap.put(schemaName, dataSource);
+
+            i ++;
         }
         return dataSourceMap;
+    }
+
+    private ReadwriteSplittingRuleConfiguration buildReadWriteRuleConfiguration(String readDatasource, String writeDatasource) {
+        Properties readWriteProperties = new Properties();
+        readWriteProperties.setProperty("read-data-source-names", readDatasource);
+        readWriteProperties.setProperty("write-data-source-name", writeDatasource);
+        ReadwriteSplittingDataSourceRuleConfiguration dataSourceConfig =
+                new ReadwriteSplittingDataSourceRuleConfiguration("default", "Static",
+                        readWriteProperties, "ROUND_ROBIN");
+        ShardingSphereAlgorithmConfiguration algorithmConfiguration =
+                new ShardingSphereAlgorithmConfiguration("ROUND_ROBIN", new Properties());
+        Map<String, ShardingSphereAlgorithmConfiguration> sphereAlgorithmConfigurationMap = new HashMap<>(1);
+        sphereAlgorithmConfigurationMap.put("round_robin", algorithmConfiguration);
+        return new ReadwriteSplittingRuleConfiguration(Collections.singleton(dataSourceConfig), sphereAlgorithmConfigurationMap);
     }
 
     private void registerTableRule(Map<String, String> shardingAlgorithmMap,
@@ -165,7 +199,8 @@ public class ShardingAutoConfiguration {
                 String[] algorithmItem = item.split("->");
                 shardingAlgorithmMap.put(algorithmItem[0], StringUtils.substringBefore(algorithmItem[1], "["));
             }
-        } else {
+        }
+        if (shardingAlgorithmItems.length == 1) {
             for (String logicTable : logicTables) {
                 shardingAlgorithmMap.put(logicTable,
                         StringUtils.substringBefore(shardingAlgorithmItems[0], "["));
@@ -184,7 +219,8 @@ public class ShardingAutoConfiguration {
                     usedShardingAlgorithm.put(algorithmName, algorithmProperties);
                 }
             }
-        } else {
+        }
+        if (shardingAlgorithmItems.length == 1) {
             String algorithmProperties = StringUtils.substringBetween(shardingAlgorithmItems[0], "[", "]");
             usedShardingAlgorithm.put(StringUtils.substringBefore(shardingAlgorithmItems[0], "["), algorithmProperties);
         }
@@ -197,14 +233,15 @@ public class ShardingAutoConfiguration {
                 String[] columnMap = column.split("->");
                 shardingColumnMap.put(columnMap[0], columnMap[1]);
             }
-        } else {
+        }
+        if (shardingColumns.length == 1) {
             shardingColumnMap.put(properties.getDatasource().getLogicTable(),
                     properties.getAlgorithm().getShardingColumn());
         }
         return shardingColumnMap;
     }
 
-    private Map<String, String> getShardingActualNodeMapping(String[] logicTables, String logicSchemaName, String[] tablePartitionNumItems) {
+    private Map<String, String> getShardingActualNodeMapping(String[] logicTables, String logicDbName, String[] tablePartitionNumItems, String[] dbAddresses) {
         Map<String, String> actualShardingNodeMap = new HashMap<>();
         for (String logicTable : logicTables) {
             if (tablePartitionNumItems.length > 1) {
@@ -212,30 +249,33 @@ public class ShardingAutoConfiguration {
                     String[] partitionPair = partitionNum.split("->");
                     if (partitionPair[0].equals(logicTable)) {
                         actualShardingNodeMap.put(logicTable,
-                                getActualNodeConfiguration(logicTable, logicSchemaName, Integer.parseInt(partitionPair[1])));
+                                getActualNodeConfiguration(logicTable, logicDbName, Integer.parseInt(partitionPair[1]), dbAddresses));
                     }
                 }
-            } else {
+            }
+            if (tablePartitionNumItems.length == 1) {
                 actualShardingNodeMap.put(logicTable,
-                        getActualNodeConfiguration(logicTable, logicSchemaName, Integer.parseInt(tablePartitionNumItems[0])));
+                        getActualNodeConfiguration(logicTable, logicDbName, Integer.parseInt(tablePartitionNumItems[0]), dbAddresses));
             }
         }
         return actualShardingNodeMap;
     }
 
-    private String getActualNodeConfiguration(String logicTable, String logicSchemaName, int tablePartitionNum) {
-        String actualDatabases;
-        if (properties.getDatasource().getDbPartitionNum() > 1) {
+    private String getActualNodeConfiguration(String logicTable, String logicSchemaName, int tablePartitionNum, String[] dbAddresses) {
+        String actualDatabases = "";
+        if (dbAddresses.length > 1) {
             actualDatabases = String.format("%s%s${0..%d}.%s%s${0..%d}",
                     logicSchemaName,
                     properties.getPartitionJoinDelimiter(),
-                    properties.getDatasource().getDbPartitionNum() - 1,
+                    dbAddresses.length - 1,
                     logicTable,
                     properties.getPartitionJoinDelimiter(),
                     tablePartitionNum - 1);
-        } else {
-            actualDatabases = String.format("%s.%s%s${0..%d}",
+        }
+        if (dbAddresses.length == 1) {
+            actualDatabases = String.format("%s%s0.%s%s${0..%d}",
                     logicSchemaName,
+                    properties.getPartitionJoinDelimiter(),
                     logicTable,
                     properties.getPartitionJoinDelimiter(),
                     tablePartitionNum - 1);

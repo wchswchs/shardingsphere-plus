@@ -40,20 +40,16 @@ public class ShardingProperties {
     }
 
     public static class Datasource {
-        private int dbPartitionNum = 1;
         private String tablePartitionNum = "2";
-        private String jdbcUrl;
+        private String dbAddress;
+        private String logicDbName;
+        private String characterEncoding = "utf8";
+        private boolean rewriteBatchedStatements = true;
         private String username;
         private String password;
         private String logicTable;
-
-        public int getDbPartitionNum() {
-            return dbPartitionNum;
-        }
-
-        public void setDbPartitionNum(int dbPartitionNum) {
-            this.dbPartitionNum = dbPartitionNum;
-        }
+        private String writeDatasource;
+        private String readDatasource;
 
         public String getTablePartitionNum() {
             return tablePartitionNum;
@@ -63,12 +59,36 @@ public class ShardingProperties {
             this.tablePartitionNum = tablePartitionNum;
         }
 
-        public String getJdbcUrl() {
-            return jdbcUrl;
+        public String getDbAddress() {
+            return dbAddress;
         }
 
-        public void setJdbcUrl(String jdbcUrl) {
-            this.jdbcUrl = jdbcUrl;
+        public void setDbAddress(String dbAddress) {
+            this.dbAddress = dbAddress;
+        }
+
+        public String getLogicDbName() {
+            return logicDbName;
+        }
+
+        public void setLogicDbName(String logicDbName) {
+            this.logicDbName = logicDbName;
+        }
+
+        public String getCharacterEncoding() {
+            return characterEncoding;
+        }
+
+        public void setCharacterEncoding(String characterEncoding) {
+            this.characterEncoding = characterEncoding;
+        }
+
+        public boolean isRewriteBatchedStatements() {
+            return rewriteBatchedStatements;
+        }
+
+        public void setRewriteBatchedStatements(boolean rewriteBatchedStatements) {
+            this.rewriteBatchedStatements = rewriteBatchedStatements;
         }
 
         public String getUsername() {
@@ -94,11 +114,27 @@ public class ShardingProperties {
         public void setLogicTable(String logicTable) {
             this.logicTable = logicTable;
         }
+
+        public String getWriteDatasource() {
+            return writeDatasource;
+        }
+
+        public void setWriteDatasource(String writeDatasource) {
+            this.writeDatasource = writeDatasource;
+        }
+
+        public String getReadDatasource() {
+            return readDatasource;
+        }
+
+        public void setReadDatasource(String readDatasource) {
+            this.readDatasource = readDatasource;
+        }
     }
 
     public static class Algorithm {
         private String shardingColumn;
-        private String shardingAlgorithmName = "StrHash";
+        private String shardingTableAlgorithmName = "StrHash";
 
         public String getShardingColumn() {
             return shardingColumn;
@@ -108,12 +144,12 @@ public class ShardingProperties {
             this.shardingColumn = shardingColumn;
         }
 
-        public String getShardingAlgorithmName() {
-            return shardingAlgorithmName;
+        public String getShardingTableAlgorithmName() {
+            return shardingTableAlgorithmName;
         }
 
-        public void setShardingAlgorithmName(String shardingAlgorithmName) {
-            this.shardingAlgorithmName = shardingAlgorithmName;
+        public void setShardingTableAlgorithmName(String shardingTableAlgorithmName) {
+            this.shardingTableAlgorithmName = shardingTableAlgorithmName;
         }
     }
 
