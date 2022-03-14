@@ -34,7 +34,7 @@ spring.sharding.datasource.logicTable=user,user_ext
 spring.sharding.algorithm.shardingTableAlgorithmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE
 spring.sharding.datasource.username=test
 spring.sharding.datasource.password=test
-spring.sharding.datasource.tablePartitionNum=user->3
+spring.sharding.datasource.tablePartitionNum=user->3,user_ext->10
 //print actual sql
 spring.sharding.sqlShow=true
 ```
