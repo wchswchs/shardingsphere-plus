@@ -19,7 +19,6 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
           <version>Latest Version</version>
       </dependency>
       ```
--   Inject your custom extension bean for ShardingSphere
 -   Add Configuration Parameters
 
 ## Spring Boot Configuration Parameters
