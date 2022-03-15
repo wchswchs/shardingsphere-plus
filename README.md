@@ -26,7 +26,7 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 
 ### Single Database and Multi Tables Sharding
 ```text
-spring.sharding.algorithm.shardingColumn=name
+spring.sharding.algorithm.shardingColumn=user->name,user_ext->id
 spring.sharding.datasource.dbServer=localhost:3306
 spring.sharding.datasource.characterEncoding=utf8 //default: utf8
 spring.sharding.datasource.rewriteBatchedStatements=false //default: true
@@ -48,7 +48,7 @@ spring.sharding.sqlShow=true
 
 ### Multi Database and Multi Tables Sharding
 ```text
-spring.sharding.algorithm.shardingColumn=name
+spring.sharding.algorithm.shardingColumn=user->name,user_ext->id
 spring.sharding.datasource.dbServer=localhost:3306,localhost:3307,localhost:3308
 spring.sharding.datasource.characterEncoding=utf8 //default: utf8
 spring.sharding.datasource.rewriteBatchedStatements=false //default: true
@@ -71,7 +71,6 @@ spring.sharding.sqlShow=true
 
 ### Read Write Splitter
 ```text
-spring.sharding.algorithm.shardingColumn=name
 spring.sharding.datasource.dbServer=localhost:3306,localhost:3307,localhost:3308
 spring.sharding.datasource.characterEncoding=utf8 //default: utf8
 spring.sharding.datasource.rewriteBatchedStatements=false //default: true
