@@ -24,12 +24,13 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 ## Spring Boot Configuration Parameters
 ```text
 spring.sharding.algorithm.shardingColumn=name
-spring.sharding.datasource.dbAddress=localhost:3306,localhost:3307,localhost:3308
+spring.sharding.datasource.dbServer=localhost:3306,localhost:3307,localhost:3308,localhost:3309,localhost:3310
 spring.sharding.datasource.characterEncoding=utf8 //default: utf8
 spring.sharding.datasource.rewriteBatchedStatements=false //default: true
 spring.sharding.datasource.logicDbName=test
 spring.sharding.datasource.writeDatasource=0 //0: localhost:3306
-spring.sharding.datasource.readDatasource=1,2 //1: localhost:3307, 2: localhost:3308
+spring.sharding.datasource.readDatasource=2,3,4 //1: localhost:3307, 2: localhost:3308
+spring.sharding.datasource.shardingDatasource=0..1
 spring.sharding.datasource.logicTable=user,user_ext
 spring.sharding.algorithm.shardingTableAlgorithmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE
 spring.sharding.datasource.username=test

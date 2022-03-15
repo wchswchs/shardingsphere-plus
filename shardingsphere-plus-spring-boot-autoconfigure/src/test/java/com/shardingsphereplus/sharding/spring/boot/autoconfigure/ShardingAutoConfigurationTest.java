@@ -24,7 +24,7 @@ public class ShardingAutoConfigurationTest {
     @BeforeEach
     void init() {
         this.context = new AnnotationConfigApplicationContext();
-        TestPropertyValues.of("spring.sharding.datasource.dbAddress:localhost:3306").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.datasource.dbServer:localhost:3306").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.logicDbName:test").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.logicTable:user").applyTo(this.context);
         TestPropertyValues.of("spring.sharding.datasource.username:root").applyTo(this.context);
@@ -65,7 +65,7 @@ public class ShardingAutoConfigurationTest {
     @Test
     @DisplayName("分库配置参数测试")
     public void testDbPartitionNum() {
-        TestPropertyValues.of("spring.sharding.datasource.dbAddress:localhost:3306,localhost:3307").applyTo(this.context);
+        TestPropertyValues.of("spring.sharding.datasource.dbServer:localhost:3306,localhost:3307").applyTo(this.context);
         context.register(ShardingAutoConfiguration.class);
         context.refresh();
         String schemaName = context.getBean(ShardingSphereDataSource.class).getSchemaName();

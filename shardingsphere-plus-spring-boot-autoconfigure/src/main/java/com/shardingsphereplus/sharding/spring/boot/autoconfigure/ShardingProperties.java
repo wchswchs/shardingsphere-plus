@@ -41,7 +41,7 @@ public class ShardingProperties {
 
     public static class Datasource {
         private String tablePartitionNum = "2";
-        private String dbAddress;
+        private String dbServer;
         private String logicDbName;
         private String characterEncoding = "utf8";
         private boolean rewriteBatchedStatements = true;
@@ -50,6 +50,7 @@ public class ShardingProperties {
         private String logicTable;
         private String writeDatasource;
         private String readDatasource;
+        private String shardingDatasource;
 
         public String getTablePartitionNum() {
             return tablePartitionNum;
@@ -59,12 +60,12 @@ public class ShardingProperties {
             this.tablePartitionNum = tablePartitionNum;
         }
 
-        public String getDbAddress() {
-            return dbAddress;
+        public String getDbServer() {
+            return dbServer;
         }
 
-        public void setDbAddress(String dbAddress) {
-            this.dbAddress = dbAddress;
+        public void setDbServer(String dbServer) {
+            this.dbServer = dbServer;
         }
 
         public String getLogicDbName() {
@@ -129,6 +130,14 @@ public class ShardingProperties {
 
         public void setReadDatasource(String readDatasource) {
             this.readDatasource = readDatasource;
+        }
+
+        public String getShardingDatasource() {
+            return shardingDatasource;
+        }
+
+        public void setShardingDatasource(String shardingDatasource) {
+            this.shardingDatasource = shardingDatasource;
         }
     }
 
