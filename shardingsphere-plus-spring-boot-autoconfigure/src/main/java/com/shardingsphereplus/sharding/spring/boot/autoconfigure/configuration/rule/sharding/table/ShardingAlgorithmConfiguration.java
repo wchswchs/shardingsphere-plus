@@ -24,12 +24,11 @@ public class ShardingAlgorithmConfiguration implements Configuration<Map<String,
                 String[] algorithmItem = item.split("->");
                 shardingAlgorithmMap.put(algorithmItem[0], StringUtils.substringBefore(algorithmItem[1], "["));
             }
+            return shardingAlgorithmMap;
         }
-        if (shardingAlgorithms.length == 1) {
-            for (String logicTable : logicTables) {
-                shardingAlgorithmMap.put(logicTable,
-                        StringUtils.substringBefore(shardingAlgorithms[0], "["));
-            }
+        for (String logicTable : logicTables) {
+            shardingAlgorithmMap.put(logicTable,
+                    StringUtils.substringBefore(shardingAlgorithms[0], "["));
         }
         return shardingAlgorithmMap;
     }

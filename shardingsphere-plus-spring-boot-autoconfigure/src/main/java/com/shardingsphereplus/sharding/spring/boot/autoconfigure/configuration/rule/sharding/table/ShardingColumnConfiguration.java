@@ -23,10 +23,9 @@ public class ShardingColumnConfiguration implements Configuration<Map<String, St
                 String[] columnMap = column.split("->");
                 shardingColumnMap.put(columnMap[0], columnMap[1]);
             }
+            return shardingColumnMap;
         }
-        if (shardingColumns.length == 1) {
-            shardingColumnMap.put(logicTables[0], shardingColumns[0]);
-        }
+        shardingColumnMap.put(logicTables[0], shardingColumns[0]);
         return shardingColumnMap;
     }
 
