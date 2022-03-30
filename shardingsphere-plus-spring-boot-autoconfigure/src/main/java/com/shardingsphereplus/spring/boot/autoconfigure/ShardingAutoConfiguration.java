@@ -8,6 +8,7 @@ import com.shardingsphereplus.config.configuration.rule.sharding.TableRuleConfig
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ActualNodesConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ShardingAlgorithmConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ShardingColumnConfiguration;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
 import org.apache.shardingsphere.infra.config.RuleConfiguration;
@@ -39,11 +40,6 @@ public class ShardingAutoConfiguration {
         if (StringUtils.isEmpty(properties.getDatasource().getLogicDbName())) {
             throw new IllegalArgumentException("configuration item spring.sharding.datasource.logicDbName can not be empty");
         }
-        if (StringUtils.isEmpty(properties.getDatasource().getLogicTable())) {
-            throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.logicTable can not be empty"
-            );
-        }
         if (StringUtils.isEmpty(properties.getDatasource().getUsername())) {
             throw new IllegalArgumentException(
                     "configuration item spring.sharding.datasource.username can not be empty"
@@ -54,14 +50,10 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.password can not be empty"
             );
         }
-        if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())) {
+        if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())
+                || Integer.parseInt(properties.getDatasource().getTablePartitionNum()) < 0) {
             throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty"
-            );
-        }
-        if (StringUtils.isEmpty(properties.getAlgorithm().getShardingColumn())) {
-            throw new IllegalArgumentException(
-                    "configuration item spring.sharding.algorithm.shardingColumn can not be empty"
+                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty or lower than 0"
             );
         }
 
@@ -72,6 +64,8 @@ public class ShardingAutoConfiguration {
         String[] shardingColumns = properties.getAlgorithm().getShardingColumn().split(",");
         String[] tablePartitionNumList = properties.getDatasource().getTablePartitionNum().split(",");
 
+        List<RuleConfiguration> ruleConfigurations = new ArrayList<>();
+
         Map<String, DataSource> dataSourceMap = new DatasourceConfiguration(
                 logicDbName, dbServers,
                 properties.getDatasource().getUsername(),
@@ -80,20 +74,21 @@ public class ShardingAutoConfiguration {
                 properties.getDatasource().isRewriteBatchedStatements(),
                 properties.getPartitionJoinDelimiter()).build();
 
-        List<ShardingTableRuleConfiguration> tableRuleConfigurations = new TableRuleConfiguration(
-                new ActualNodesConfiguration(
-                        logicTables, logicDbName, tablePartitionNumList,
-                        properties.getDatasource().getShardingDatasource(),
-                        properties.getPartitionJoinDelimiter()).build(),
-                new ShardingColumnConfiguration(logicTables, shardingColumns).build(),
-                new ShardingAlgorithmConfiguration(logicTables, shardingTableAlgorithms).build()
-        ).build();
-        Map<String, ShardingSphereAlgorithmConfiguration> shardingAlgorithmConfigurations =
-                new AlgorithmRuleConfiguration(shardingTableAlgorithms, properties.getPartitionJoinDelimiter()).build();
-        ShardingRuleConfiguration shardingRuleConfiguration = new ShardingConfiguration(tableRuleConfigurations, shardingAlgorithmConfigurations).build();
+        if (ArrayUtils.isNotEmpty(shardingColumns) && ArrayUtils.isNotEmpty(logicTables)) {
+            List<ShardingTableRuleConfiguration> tableRuleConfigurations = new TableRuleConfiguration(
+                    new ActualNodesConfiguration(
+                            logicTables, logicDbName, tablePartitionNumList,
+                            properties.getDatasource().getShardingDatasource(),
+                            properties.getPartitionJoinDelimiter()).build(),
+                    new ShardingColumnConfiguration(logicTables, shardingColumns).build(),
+                    new ShardingAlgorithmConfiguration(logicTables, shardingTableAlgorithms).build()
+            ).build();
+            Map<String, ShardingSphereAlgorithmConfiguration> shardingAlgorithmConfigurations =
+                    new AlgorithmRuleConfiguration(shardingTableAlgorithms, properties.getPartitionJoinDelimiter()).build();
+            ShardingRuleConfiguration shardingRuleConfiguration = new ShardingConfiguration(tableRuleConfigurations, shardingAlgorithmConfigurations).build();
+            ruleConfigurations.add(shardingRuleConfiguration);
+        }
 
-        List<RuleConfiguration> ruleConfigurations = new ArrayList<>();
-        ruleConfigurations.add(shardingRuleConfiguration);
         if (StringUtils.isNotEmpty(properties.getDatasource().getReadDatasource())
                 && StringUtils.isNotEmpty(properties.getDatasource().getReadDatasource())) {
             ruleConfigurations.add(new ReadWriteRuleConfiguration(

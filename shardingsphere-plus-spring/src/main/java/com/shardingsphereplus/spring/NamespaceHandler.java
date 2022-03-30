@@ -7,9 +7,8 @@ public class NamespaceHandler extends NamespaceHandlerSupport {
     @Override
     public void init() {
         registerBeanDefinitionParser("datasource", new DataSourceBeanDefinitionParser());
-        registerBeanDefinitionParser("partition", new DataSourceBeanDefinitionParser());
+        registerBeanDefinitionParser("sharding", new DataSourceBeanDefinitionParser());
         registerBeanDefinitionParser("debug", new DataSourceBeanDefinitionParser());
-        registerBeanDefinitionParser("sharding-algorithm", new DataSourceBeanDefinitionParser());
     }
 
 }

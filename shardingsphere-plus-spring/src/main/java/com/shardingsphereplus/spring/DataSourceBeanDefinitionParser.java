@@ -48,6 +48,13 @@ public class DataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser
 
     @Override
     protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+        if (StringUtils.isEmpty(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM))
+                || Integer.parseInt(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM)) < 0) {
+            throw new IllegalArgumentException(
+                    String.format("configuration item [%s] can not be empty or lower than 0", ATTRIBUTE_TABLE_PARTITION_NUM)
+            );
+        }
+
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(DataSource.class, () -> {
             String[] dbServers = element.getAttribute(ATTRIBUTE_DB_SERVER).split(",");
             String logicDbName = element.getAttribute(ATTRIBUTE_LOGIC_DB_NAME);
