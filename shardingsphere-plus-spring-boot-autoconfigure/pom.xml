@@ -32,13 +32,13 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>${druid.version}</version>
+            <groupId>com.shardingsphereplus</groupId>
+            <artifactId>shardingsphere-plus-lib</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.shardingsphereplus</groupId>
-            <artifactId>shardingsphere-plus-lib</artifactId>
+            <artifactId>shardingsphere-plus-config</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
