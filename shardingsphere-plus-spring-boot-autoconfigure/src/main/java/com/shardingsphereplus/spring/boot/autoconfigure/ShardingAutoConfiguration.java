@@ -56,7 +56,6 @@ public class ShardingAutoConfiguration {
             );
         }
 
-
         String[] dbServers = properties.getDatasource().getDbServer().split(",");
         String logicDbName = properties.getDatasource().getLogicDbName();
         String[] logicTables = properties.getDatasource().getLogicTable().split(",");
