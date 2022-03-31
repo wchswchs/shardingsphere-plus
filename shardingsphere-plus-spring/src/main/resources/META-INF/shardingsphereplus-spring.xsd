@@ -2,8 +2,8 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:beans="http://www.springframework.org/schema/beans"
             xmlns:tool="http://www.springframework.org/schema/tool"
-            xmlns="http://shardingsphereplus.com/schema/shardingsphere-plus-spring"
-            targetNamespace="http://shardingsphereplus.com/schema/shardingsphere-plus-spring">
+            xmlns="http://shardingsphereplus.com/schema/shardingplus-spring"
+            targetNamespace="http://shardingsphereplus.com/schema/shardingplus-spring">
     <xsd:element name="datasource">
         <xsd:annotation>
             <xsd:documentation>
@@ -11,6 +11,11 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:ID">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
             <xsd:attribute name="table-partition-num" type="xsd:integer" default="2">
                 <xsd:annotation>
                     <xsd:documentation>
@@ -97,6 +102,11 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:ID">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
             <xsd:attribute name="sharding-column" type="xsd:string">
                 <xsd:annotation>
                     <xsd:documentation>
@@ -127,6 +137,11 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:complexType>
+            <xsd:attribute name="id" type="xsd:ID">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
             <xsd:attribute name="sql-show" type="xsd:boolean" default="false">
                 <xsd:annotation>
                     <xsd:documentation>

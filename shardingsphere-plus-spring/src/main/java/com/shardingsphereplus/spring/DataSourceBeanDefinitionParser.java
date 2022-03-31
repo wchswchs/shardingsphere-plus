@@ -46,10 +46,13 @@ public class DataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser
     private static final String ATTRIBUTE_SHARDING_JOIN_DELIMITER = "join-delimiter";
     private static final String ATTRIBUTE_SQL_SHOW = "sql-show";
 
+    private static final String ELEMENT_DATASOURCE = "datasource";
+
     @Override
     protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-        if (StringUtils.isEmpty(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM))
-                || Integer.parseInt(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM)) < 0) {
+        if (element.getTagName().equals(ELEMENT_DATASOURCE)
+                && (StringUtils.isEmpty(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM))
+                || Integer.parseInt(element.getAttribute(ATTRIBUTE_TABLE_PARTITION_NUM)) < 0)) {
             throw new IllegalArgumentException(
                     String.format("configuration item [%s] can not be empty or lower than 0", ATTRIBUTE_TABLE_PARTITION_NUM)
             );

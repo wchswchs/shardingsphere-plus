@@ -31,24 +31,29 @@ public class ActualNodesConfiguration implements Configuration<Map<String, Strin
                 for (String partitionNum : tablePartitionNumList) {
                     String[] partitionPair = partitionNum.split("->");
                     if (partitionPair[0].equals(logicTable)) {
+                        int tablePartitionNum = Integer.parseInt(partitionPair[1]);
+                        if (tablePartitionNum < 0) {
+                            throw new IllegalArgumentException(
+                                    String.format("tablePartitionNum of table [%s] can not be lower than 0", partitionPair[0])
+                            );
+                        }
                         actualShardingNodeMap.put(logicTable,
                                 buildShardingActualNodes(
                                         logicTable,
                                         logicDbName,
-                                        Integer.parseInt(partitionPair[1]),
+                                        tablePartitionNum,
                                         shardingDatasources
                                 ));
                     }
                 }
             }
             if (tablePartitionNumList.length == 1) {
+                int tablePartitionNum = Integer.parseInt(tablePartitionNumList[0]);
+                if (tablePartitionNum < 0) {
+                    throw new IllegalArgumentException("tablePartitionNum can not be lower than 0");
+                }
                 actualShardingNodeMap.put(logicTable,
-                        buildShardingActualNodes(
-                                logicTables[0],
-                                logicDbName,
-                                Integer.parseInt(tablePartitionNumList[0]),
-                                shardingDatasources
-                        ));
+                        buildShardingActualNodes(logicTables[0], logicDbName, tablePartitionNum, shardingDatasources));
             }
         }
         return actualShardingNodeMap;

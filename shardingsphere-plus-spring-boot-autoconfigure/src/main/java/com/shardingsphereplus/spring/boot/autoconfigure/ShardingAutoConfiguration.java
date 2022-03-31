@@ -50,12 +50,12 @@ public class ShardingAutoConfiguration {
                     "configuration item spring.sharding.datasource.password can not be empty"
             );
         }
-        if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())
-                || Integer.parseInt(properties.getDatasource().getTablePartitionNum()) < 0) {
+        if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())) {
             throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty or lower than 0"
+                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty"
             );
         }
+
 
         String[] dbServers = properties.getDatasource().getDbServer().split(",");
         String logicDbName = properties.getDatasource().getLogicDbName();
