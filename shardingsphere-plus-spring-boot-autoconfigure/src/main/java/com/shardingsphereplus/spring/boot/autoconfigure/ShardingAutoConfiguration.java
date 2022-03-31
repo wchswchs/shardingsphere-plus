@@ -52,7 +52,7 @@ public class ShardingAutoConfiguration {
         }
         if (StringUtils.isEmpty(properties.getDatasource().getTablePartitionNum())) {
             throw new IllegalArgumentException(
-                    "configuration item spring.sharding.datasource.dbPartitionNum can not be empty"
+                    "configuration item spring.sharding.datasource.tablePartitionNum can not be empty"
             );
         }
 
