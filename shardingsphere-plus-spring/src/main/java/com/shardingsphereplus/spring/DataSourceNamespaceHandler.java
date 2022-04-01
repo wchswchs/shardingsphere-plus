@@ -2,13 +2,11 @@ package com.shardingsphereplus.spring;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
-public class NamespaceHandler extends NamespaceHandlerSupport {
+public class DataSourceNamespaceHandler extends NamespaceHandlerSupport {
 
     @Override
     public void init() {
         registerBeanDefinitionParser("datasource", new DataSourceBeanDefinitionParser());
-        registerBeanDefinitionParser("sharding", new DataSourceBeanDefinitionParser());
-        registerBeanDefinitionParser("debug", new DataSourceBeanDefinitionParser());
     }
 
 }

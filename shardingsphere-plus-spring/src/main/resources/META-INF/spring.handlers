@@ -1,1 +1,1 @@
-http\://shardingsphereplus.com/schema/shardingsphereplus-spring=com.shardingsphereplus.spring.NamespaceHandler
+http\://shardingsphereplus.com/schema/shardingsphereplus-spring=com.shardingsphereplus.spring.DataSourceNamespaceHandler

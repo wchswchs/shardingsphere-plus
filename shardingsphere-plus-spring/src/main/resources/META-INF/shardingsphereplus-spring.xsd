@@ -16,13 +16,6 @@
                     <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-            <xsd:attribute name="table-partition-num" type="xsd:integer" default="2">
-                <xsd:annotation>
-                    <xsd:documentation>
-                        <![CDATA[table partition number]]>
-                    </xsd:documentation>
-                </xsd:annotation>
-            </xsd:attribute>
             <xsd:attribute name="db-server" type="xsd:string" use="required">
                 <xsd:annotation>
                     <xsd:documentation>
@@ -93,20 +86,6 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="sharding">
-        <xsd:annotation>
-            <xsd:documentation>
-                <![CDATA[sharding algorithm]]>
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:attribute name="id" type="xsd:ID">
-                <xsd:annotation>
-                    <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
-                </xsd:annotation>
-            </xsd:attribute>
             <xsd:attribute name="sharding-column" type="xsd:string">
                 <xsd:annotation>
                     <xsd:documentation>
@@ -128,18 +107,11 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-        </xsd:complexType>
-    </xsd:element>
-    <xsd:element name="debug">
-        <xsd:annotation>
-            <xsd:documentation>
-                <![CDATA[debug config]]>
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexType>
-            <xsd:attribute name="id" type="xsd:ID">
+            <xsd:attribute name="table-partition-num" type="xsd:string" default="2">
                 <xsd:annotation>
-                    <xsd:documentation><![CDATA[ The unique identifier for a bean. ]]></xsd:documentation>
+                    <xsd:documentation>
+                        <![CDATA[table partition number]]>
+                    </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="sql-show" type="xsd:boolean" default="false">
