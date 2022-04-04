@@ -48,13 +48,13 @@ spring.sharding.datasource.rewriteBatchedStatements=false //default: true
 spring.sharding.datasource.logicDbName=user
 spring.sharding.datasource.logicTable=user,user_ext
 //if diff table has diff sharding algorithm
-spring.sharding.algorithm.shardingTableAlgorithmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE
+spring.sharding.algorithm.shardingTableAlgorithmName=user->StrHash[startIndex:1|endIndex:2],user_ext->INLINE    //format: tableName1->algorithm1,tableName2->algorithm2
 //if diff table has same sharding algorithm
 spring.sharding.algorithm.shardingTableAlgorithmName=StrHash
 spring.sharding.datasource.username=test
 spring.sharding.datasource.password=test
 //if diff table has diff partition num
-spring.sharding.datasource.tablePartitionNum=user->32,user_ext->16
+spring.sharding.datasource.tablePartitionNum=user->32,user_ext->16  //format: tableName1->num1,tableName2->num2
 //if diff table has same partition num
 spring.sharding.datasource.tablePartitionNum=32
 //print actual sql
