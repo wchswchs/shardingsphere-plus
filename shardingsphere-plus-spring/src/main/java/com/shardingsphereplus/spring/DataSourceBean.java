@@ -1,28 +1,16 @@
 package com.shardingsphereplus.spring;
 
+import com.shardingsphereplus.config.DataSourceFactory;
 import com.shardingsphereplus.config.configuration.DatasourceConfiguration;
 import com.shardingsphereplus.config.configuration.rule.ReadWriteRuleConfiguration;
-import com.shardingsphereplus.config.configuration.rule.ShardingConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.AlgorithmRuleConfiguration;
-import com.shardingsphereplus.config.configuration.rule.sharding.TableRuleConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ActualNodesConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ShardingAlgorithmConfiguration;
 import com.shardingsphereplus.config.configuration.rule.sharding.table.ShardingColumnConfiguration;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.shardingsphere.driver.api.ShardingSphereDataSourceFactory;
-import org.apache.shardingsphere.infra.config.RuleConfiguration;
-import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration;
-import org.apache.shardingsphere.sharding.api.config.ShardingRuleConfiguration;
-import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.sql.DataSource;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean {
 
@@ -60,7 +48,7 @@ public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean
         this.dataSource = buildDataSource();
     }
 
-    private DataSource buildDataSource() throws SQLException {
+    private DataSource buildDataSource() throws Exception {
         String[] dbServers = dbServer.split(",");
         String[] logicTables = logicTable.split(",");
         String[] shardingTableAlgorithms = shardingTableAlgorithmName.split(",");
@@ -68,43 +56,41 @@ public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean
         String[] tablePartitionNumList = tablePartitionNum.split(",");
         boolean rewriteBatchedStatementsBoolean = "true".equals(rewriteBatchedStatements);
 
-        Map<String, DataSource> dataSourceMap = new DatasourceConfiguration(
+        DatasourceConfiguration datasourceConfiguration = new DatasourceConfiguration(
                 logicDbName, dbServers,
                 username,
                 password,
                 serverTimeZone,
                 characterEncoding,
                 rewriteBatchedStatementsBoolean,
-                joinDelimiter).build();
-
-        List<ShardingTableRuleConfiguration> tableRuleConfigurations = new TableRuleConfiguration(
-                new ActualNodesConfiguration(
-                        logicTables, logicDbName, tablePartitionNumList,
-                        shardingDatasource,
-                        joinDelimiter).build(),
-                new ShardingColumnConfiguration(logicTables, shardingColumns).build(),
-                new ShardingAlgorithmConfiguration(logicTables, shardingTableAlgorithms).build()
-        ).build();
-        Map<String, ShardingSphereAlgorithmConfiguration> shardingAlgorithmConfigurations =
-                new AlgorithmRuleConfiguration(shardingTableAlgorithms, joinDelimiter).build();
-        ShardingRuleConfiguration shardingRuleConfiguration = new ShardingConfiguration(tableRuleConfigurations, shardingAlgorithmConfigurations).build();
-
-        List<RuleConfiguration> ruleConfigurations = new ArrayList<>();
-        ruleConfigurations.add(shardingRuleConfiguration);
-        if (StringUtils.isNotEmpty(readDatasource)
-                && StringUtils.isNotEmpty(readDatasource)) {
-            ruleConfigurations.add(new ReadWriteRuleConfiguration(
-                    readDatasource,
-                    writeDatasource,
-                    joinDelimiter,
-                    logicDbName).build());
-        }
+                joinDelimiter);
+        ActualNodesConfiguration actualNodesConfiguration = new ActualNodesConfiguration(
+                logicTables, logicDbName, tablePartitionNumList,
+                shardingDatasource,
+                joinDelimiter);
+        ShardingColumnConfiguration shardingColumnConfiguration = new ShardingColumnConfiguration(logicTables, shardingColumns);
+        ShardingAlgorithmConfiguration shardingAlgorithmConfiguration = new ShardingAlgorithmConfiguration(logicTables, shardingTableAlgorithms);
+        AlgorithmRuleConfiguration algorithmRuleConfiguration =
+                new AlgorithmRuleConfiguration(shardingTableAlgorithms, joinDelimiter);
+        ReadWriteRuleConfiguration readWriteRuleConfiguration = new ReadWriteRuleConfiguration(
+                readDatasource,
+                writeDatasource,
+                joinDelimiter,
+                logicDbName);
 
         //build common properties
-        Properties commonProperties = new Properties();
-        commonProperties.setProperty("sql-show", sqlShow);
+        DataSourceFactory.CommonConfig commonConfig = new DataSourceFactory.CommonConfig(sqlShow);
+        DataSourceFactory.Condition condition = new DataSourceFactory.Condition(shardingColumns, logicTables, logicDbName);
 
-        return ShardingSphereDataSourceFactory.createDataSource(logicDbName, dataSourceMap, ruleConfigurations, commonProperties);
+        return DataSourceFactory.build(
+                datasourceConfiguration,
+                actualNodesConfiguration,
+                shardingColumnConfiguration,
+                shardingAlgorithmConfiguration,
+                readWriteRuleConfiguration,
+                algorithmRuleConfiguration,
+                condition, commonConfig, logicDbName
+        );
     }
 
     public void setDbServer(String dbServer) {
