@@ -69,6 +69,7 @@ public class ShardingAutoConfiguration {
                 logicDbName, dbServers,
                 properties.getDatasource().getUsername(),
                 properties.getDatasource().getPassword(),
+                properties.getDatasource().getServerTimeZone(),
                 properties.getDatasource().getCharacterEncoding(),
                 properties.getDatasource().isRewriteBatchedStatements(),
                 properties.getPartitionJoinDelimiter()).build();

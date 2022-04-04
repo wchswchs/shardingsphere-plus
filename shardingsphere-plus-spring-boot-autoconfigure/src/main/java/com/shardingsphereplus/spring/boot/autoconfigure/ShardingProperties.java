@@ -43,6 +43,7 @@ public class ShardingProperties {
         private String tablePartitionNum = "2";
         private String dbServer;
         private String logicDbName;
+        private String serverTimeZone = "Asia/Shanghai";
         private String characterEncoding = "utf8";
         private boolean rewriteBatchedStatements = true;
         private String username;
@@ -74,6 +75,14 @@ public class ShardingProperties {
 
         public void setLogicDbName(String logicDbName) {
             this.logicDbName = logicDbName;
+        }
+
+        public String getServerTimeZone() {
+            return serverTimeZone;
+        }
+
+        public void setServerTimeZone(String serverTimeZone) {
+            this.serverTimeZone = serverTimeZone;
         }
 
         public String getCharacterEncoding() {

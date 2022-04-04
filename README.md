@@ -20,13 +20,15 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
       </dependency>
       ```
 -   Add Configuration Parameters
+    - Support Spring and Spring Boot Integration
 
-## Spring Boot Configuration Parameters
+## Spring Boot Configuration
 
 ### Single Database and Multi Tables Sharding
 ```text
-spring.sharding.algorithm.shardingColumn=user->name,user_ext->id
+spring.sharding.algorithm.shardingColumn=user->name,user_ext->id    //format: tableName1->column,tableName2->column
 spring.sharding.datasource.dbServer=localhost:3306
+spring.sharding.datasource.serverTimeZone="UTC" //default: Asia/Shanghai
 spring.sharding.datasource.characterEncoding=utf8 //default: utf8
 spring.sharding.datasource.rewriteBatchedStatements=false //default: true
 spring.sharding.datasource.logicDbName=user
@@ -80,6 +82,30 @@ spring.sharding.datasource.username=test
 spring.sharding.datasource.password=test
 //print actual sql
 spring.sharding.sqlShow=true
+```
+
+## Spring Configuration
+XML Configuration: 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:shardingsphereplus="http://shardingsphereplus.com/schema/shardingsphereplus-spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://shardingsphereplus.com/schema/shardingsphereplus-spring
+       http://shardingsphereplus.com/schema/shardingsphereplus-spring.xsd">
+    <shardingsphereplus:datasource id="dataSource"
+            db-server="localhost:3306"
+            logic-dbname="user"
+            username="test"
+            password="test"
+            logic-table="t_user"
+            sharding-column="user_id"
+            sharding-table-algorithm-name="StrHash"
+            table-partition-num="64"
+    />
+</beans>
 ```
 
 ## StrHash Sharding Algorithm

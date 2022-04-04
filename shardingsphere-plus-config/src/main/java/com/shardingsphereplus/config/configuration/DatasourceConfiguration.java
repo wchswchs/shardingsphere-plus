@@ -12,6 +12,7 @@ public class DatasourceConfiguration implements Configuration<Map<String, DataSo
 
     private final String logicDbName;
     private final String[] dbServers;
+    private final String serverTimeZone;
     private final String characterEncoding;
     private final boolean rewriteBatchedStatements;
     private final String partitionJoinDelimiter;
@@ -19,13 +20,14 @@ public class DatasourceConfiguration implements Configuration<Map<String, DataSo
     private final String password;
 
     public DatasourceConfiguration(String logicDbName, String[] dbServers, String username, String password) {
-        this(logicDbName, dbServers, username, password, "utf8", true, "_");
+        this(logicDbName, dbServers, username, password, "Asia/Shanghai", "utf8", true, "_");
     }
 
     public DatasourceConfiguration(String logicDbName,
                                    String[] dbServers,
                                    String username,
                                    String password,
+                                   String serverTimeZone,
                                    String characterEncoding,
                                    boolean rewriteBatchedStatements,
                                    String partitionJoinDelimiter) {
@@ -33,6 +35,7 @@ public class DatasourceConfiguration implements Configuration<Map<String, DataSo
         this.dbServers = dbServers;
         this.username = username;
         this.password = password;
+        this.serverTimeZone = serverTimeZone;
         this.characterEncoding = characterEncoding;
         this.rewriteBatchedStatements = rewriteBatchedStatements;
         this.partitionJoinDelimiter = partitionJoinDelimiter;
@@ -48,9 +51,10 @@ public class DatasourceConfiguration implements Configuration<Map<String, DataSo
             String schemaName = logicDbName + partitionJoinDelimiter + i;
             String jdbcAddress = StringUtils.joinWith("//", "jdbc:mysql:", address);
             String jdbcUrl = StringUtils.joinWith("/", jdbcAddress, logicDbName);
+            String serverTimeZoneParam = StringUtils.joinWith("=", "serverTimezone", serverTimeZone);
             String characterEncodingParam = StringUtils.joinWith("=", "characterEncoding", characterEncoding);
             String rewriteBatchedStatementsParam = StringUtils.joinWith("=", "rewriteBatchedStatements", rewriteBatchedStatements);
-            String jdbcParams = StringUtils.joinWith("&", characterEncodingParam, rewriteBatchedStatementsParam);
+            String jdbcParams = StringUtils.joinWith("&", serverTimeZoneParam, characterEncodingParam, rewriteBatchedStatementsParam);
             dataSource.setUrl(StringUtils.joinWith("?", jdbcUrl, jdbcParams));
             dataSource.setUsername(username);
             dataSource.setPassword(password);

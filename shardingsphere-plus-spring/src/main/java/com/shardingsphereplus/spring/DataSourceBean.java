@@ -27,6 +27,7 @@ import java.util.Properties;
 public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean {
 
     private String dbServer;
+    private String serverTimeZone;
     private String characterEncoding;
     private String logicDbName;
     private String logicTable;
@@ -71,6 +72,7 @@ public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean
                 logicDbName, dbServers,
                 username,
                 password,
+                serverTimeZone,
                 characterEncoding,
                 rewriteBatchedStatementsBoolean,
                 joinDelimiter).build();
@@ -107,6 +109,10 @@ public class DataSourceBean implements FactoryBean<DataSource>, InitializingBean
 
     public void setDbServer(String dbServer) {
         this.dbServer = dbServer;
+    }
+
+    public void setServerTimeZone(String serverTimeZone) {
+        this.serverTimeZone = serverTimeZone;
     }
 
     public void setCharacterEncoding(String characterEncoding) {

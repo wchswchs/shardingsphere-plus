@@ -30,6 +30,13 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
+            <xsd:attribute name="server-timezone" type="xsd:string" default="Asia/Shanghai">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        <![CDATA[serverTimezone]]>
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
             <xsd:attribute name="character-encoding" type="xsd:string" default="utf8">
                 <xsd:annotation>
                     <xsd:documentation>

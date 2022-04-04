@@ -10,6 +10,7 @@ import org.w3c.dom.Element;
 
 public class DataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
+    private static final String ATTRIBUTE_SERVER_TIMEZONE = "server-timezone";
     private static final String ATTRIBUTE_CHARACTER_ENCODING = "character-encoding";
     private static final String ATTRIBUTE_DB_SERVER = "db-server";
     private static final String ATTRIBUTE_LOGIC_DB_NAME = "logic-dbname";
@@ -35,6 +36,7 @@ public class DataSourceBeanDefinitionParser extends AbstractBeanDefinitionParser
         }
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(DataSourceBean.class);
         builder.addPropertyValue("dbServer", element.getAttribute(ATTRIBUTE_DB_SERVER));
+        builder.addPropertyValue("serverTimeZone", element.getAttribute(ATTRIBUTE_SERVER_TIMEZONE));
         builder.addPropertyValue("characterEncoding", element.getAttribute(ATTRIBUTE_CHARACTER_ENCODING));
         builder.addPropertyValue("logicDbName", element.getAttribute(ATTRIBUTE_LOGIC_DB_NAME));
         builder.addPropertyValue("logicTable", element.getAttribute(ATTRIBUTE_LOGIC_TABLE));
