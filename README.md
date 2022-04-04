@@ -9,7 +9,9 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
 -   Built in StrHash sharding algorithm with parameters using murmurhash to avoid data skew
 
 ## How to use
--   Add ShardingSphere-Plus dependency
+
+### Spring Boot
+-   Add ShardingSphere-Plus Boot dependency
     - Latest Version: 1.0.0
     - Maven:
       ```xml
@@ -19,8 +21,20 @@ ShardingSphere-Plus is a toolkit which is compatible with ShardingSphere of vers
           <version>Latest Version</version>
       </dependency>
       ```
--   Add Configuration Parameters
-    - Support Spring and Spring Boot Integration
+-   Add Spring Boot Configuration Parameters
+
+### Spring
+-   Add ShardingSphere-Plus Spring dependency
+    - Latest Version: 1.0.0
+    - Maven:
+      ```xml
+      <dependency>
+          <groupId>com.shardingsphereplus</groupId>
+          <artifactId>shardingsphere-plus-spring</artifactId>
+          <version>Latest Version</version>
+      </dependency>
+      ```
+-   Add Spring Configuration Parameters
 
 ## Spring Boot Configuration
 
